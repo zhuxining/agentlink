@@ -1,7 +1,7 @@
 {
   "name": "agentlink",
   "productName": "agentlink",
-  "version": "1.4.0",
+  "version": "0.1.0",
   "description": "Electron Forge with shadcn-ui (Vite + Typescript)",
   "main": ".vite/build/main.js",
   "private": true,
