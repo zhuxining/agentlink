@@ -32,7 +32,6 @@
     "@icons-pack/react-simple-icons": "^13.13.0",
     "@orpc/client": "^1.14.6",
     "@orpc/server": "^1.14.6",
-    "@radix-ui/react-use-controllable-state": "^1.2.3",
     "@rive-app/react-webgl2": "^4.29.3",
     "@streamdown/cjk": "^1.0.3",
     "@streamdown/code": "^1.1.1",
