@@ -21,6 +21,9 @@ jobs:
       - name: Install and build
         run: npm ci
 
+      - name: Generate changelog
+        run: npx git-cliff -o CHANGELOG.md
+
       - name: Publish Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

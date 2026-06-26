@@ -1,0 +1,7 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "*.{js,ts,jsx,tsx,json,jsonc,css}"
+      run: npx ultracite fix
+      stage_fixed: true
