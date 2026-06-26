@@ -6,7 +6,6 @@ import { updateAppLanguage } from "./actions/language";
 import { syncWithLocalTheme } from "./actions/theme";
 import { router } from "./utils/routes";
 import "./localization/i18n";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function App() {
   const { i18n } = useTranslation();
@@ -26,8 +25,6 @@ if (!container) {
 const root = createRoot(container);
 root.render(
   <React.StrictMode>
-    <TooltipProvider>
-      <App />
-    </TooltipProvider>
+    <App />
   </React.StrictMode>
 );

@@ -1,5 +1,6 @@
 import type React from "react";
 import DragWindowRegion from "@/components/drag-window-region";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function BaseLayout({
   children,
@@ -9,7 +10,9 @@ export default function BaseLayout({
   return (
     <>
       <DragWindowRegion title="agentlink" />
-      <main className="h-screen p-2 pb-20">{children}</main>
+      <main className="h-screen p-2 pb-20">
+        <TooltipProvider>{children}</TooltipProvider>
+      </main>
     </>
   );
 }
