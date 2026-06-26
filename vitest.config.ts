@@ -20,7 +20,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json", "html"],
       include: ["src/**/*"],
-      exclude: [],
+      exclude: ["src/components/ui/**", "src/components/ai-elements/**"],
     },
   },
 });
