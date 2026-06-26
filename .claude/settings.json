@@ -1,5 +1,17 @@
 {
-  "hooks": {},
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "bun run fix --skip=correctness/noUnusedImports",
+            "type": "command"
+          }
+        ],
+        "matcher": "Write|Edit"
+      }
+    ]
+  },
   "enabledPlugins": {
     "security-guidance@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
