@@ -20,7 +20,7 @@ export default function NavigationMenu() {
           <NavigationMenuLink
             className={navigationMenuTriggerStyle()}
             href="/"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
               e.preventDefault();
               navigate({ to: "/" });
             }}
@@ -32,7 +32,7 @@ export default function NavigationMenu() {
           <NavigationMenuLink
             className={navigationMenuTriggerStyle()}
             href="/second"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
               e.preventDefault();
               navigate({ to: "/second" });
             }}
@@ -44,7 +44,7 @@ export default function NavigationMenu() {
           <NavigationMenuLink
             className={navigationMenuTriggerStyle()}
             href="https://docs.luanroger.dev/agentlink"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
               e.preventDefault();
               openExternalLink("https://docs.luanroger.dev/agentlink");
             }}
