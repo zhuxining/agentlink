@@ -4,8 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "lib": ["dom", "ESNext"],
-    "composite": true,
-    "declaration": true,
+    "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": false,
     "skipLibCheck": true,
@@ -14,7 +13,6 @@
     "allowImportingTsExtensions": true,
     "useDefineForClassFields": true,
     "noImplicitAny": true,
-    "sourceMap": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -25,7 +23,6 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "outDir": "dist",
     "moduleResolution": "bundler",
     "resolveJsonModule": true
   },

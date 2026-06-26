@@ -1,6 +1,7 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
 ## [unreleased]
 
 ### ⚙️ Miscellaneous Tasks
@@ -20,6 +21,7 @@ All notable changes to this project will be documented in this file.
 ### 🎨 Styling
 
 - Run Biome
+
 ## [1.4.0] - 2026-03-25
 
 ### ⚙️ Miscellaneous Tasks
@@ -53,6 +55,7 @@ All notable changes to this project will be documented in this file.
 
 - Remove reduntat comments and options
 - Extract some code into files from main
+
 ## [1.3.2] - 2026-02-05
 
 ### ⚙️ Miscellaneous Tasks
@@ -85,6 +88,7 @@ All notable changes to this project will be documented in this file.
 ### 🚜 Refactor
 
 - Rename to app.tsx
+
 ## [1.3.1] - 2025-12-28
 
 ### ⚙️ Miscellaneous Tasks
@@ -94,6 +98,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - T is undefined
+
 ## [1.3.0] - 2025-12-28
 
 ### ⚙️ Miscellaneous Tasks
@@ -130,6 +135,7 @@ All notable changes to this project will be documented in this file.
 ### 🧪 Testing
 
 - Remove unescessary test
+
 ## [1.2.0] - 2025-12-06
 
 ### ⚙️ Miscellaneous Tasks
@@ -158,6 +164,7 @@ All notable changes to this project will be documented in this file.
 ### 🚜 Refactor
 
 - Rename to ExternalLink
+
 ## [1.1.0] - 2025-11-23
 
 ### ⚙️ Miscellaneous Tasks
@@ -181,11 +188,13 @@ All notable changes to this project will be documented in this file.
 
 - Add update checker
 - Rename platform IPC to app
+
 ## [1.0.1] - 2025-11-23
 
 ### ⚙️ Miscellaneous Tasks
 
 - Bump version
+
 ## [1.0.0] - 2025-11-23
 
 ### ⚙️ Miscellaneous Tasks
