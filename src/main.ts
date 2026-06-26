@@ -52,7 +52,7 @@ function checkForUpdates() {
   updateElectronApp({
     updateSource: {
       type: UpdateSourceType.ElectronPublicUpdateService,
-      repo: "LuanRoger/electron-shadcn",
+      repo: "LuanRoger/agentlink",
     },
   });
 }
