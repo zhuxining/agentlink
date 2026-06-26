@@ -31,7 +31,7 @@ jobs:
         run: bun install
 
       - name: Install Electron binary
-        run: node node_modules/electron/install.js
+        run: bun node_modules/electron/install.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
