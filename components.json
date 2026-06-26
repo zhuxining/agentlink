@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "radix-mira",
+  "style": "base-nova",
   "menuColor": "default",
   "menuAccent": "subtle",
   "rsc": false,
