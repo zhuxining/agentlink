@@ -10,27 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 24
-          cache: npm
+          bun-version: latest
       - name: Install dependencies
-        run: npm ci
+        run: bun install
       - name: Run unit tests
-        run: npm run test:unit
+        run: bun run test:unit
 
   test-e2e:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 20
-          cache: npm
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Install Electron binary
         run: node node_modules/electron/install.js
@@ -38,15 +36,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Create Executable
-        run: npm run package
+        run: bun run package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Playwright tests
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" npm run test:e2e
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" bun run test:e2e
 
       - name: Upload artifacts
         if: always()
