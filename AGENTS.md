@@ -38,8 +38,8 @@ npm run bump-ui         # 将 shadcn/ui 组件更新到最新版本
 
 ### 外部依赖边界
 
-- 渠道协议适配、webhook 验签、消息格式化由 **Chat SDK** 提供，AgentLink 不重新实现。
-- Agent 执行由外部 **ACP Server** 完成，AgentLink 不内嵌 Agent runtime。
+- 渠道协议适配、webhook 验签、消息格式化、SlashCommand 事件接收、Modal 交互、Reaction 处理由 **Chat SDK** 提供，AgentLink 不重新实现。线程订阅和 transcripts 消息历史由 Chat SDK 的 SQLite state adapter 持久化。
+- Agent 执行由外部 **ACP Server** 完成，AgentLink 负责启动本地进程并管理生命周期。Session 管理、Permission 控制、Mode/Config 切换由 ACP 协议提供，AgentLink 仅做命令映射和 UI 渲染。
 
 ### TypeScript
 
@@ -48,7 +48,7 @@ npm run bump-ui         # 将 shadcn/ui 组件更新到最新版本
 
 ### Electron 安全
 
-- **密钥存储**：渠道凭证、ACP Server secret 等敏感数据必须通过 `electron.safeStorage` 在主进程加密存储。禁止在 Renderer 的 `localStorage` 或 `sessionStorage` 中存放明文密钥。
+- **密钥存储**：渠道凭证等敏感数据必须通过 `electron.safeStorage` 在主进程加密存储。禁止在 Renderer 的 `localStorage` 或 `sessionStorage` 中存放明文密钥。
 - **URL 校验**：`shell.openExternal` 调用前必须校验 URL 协议为 `https:` 或 `http:`，拒绝 `file:`、`javascript:` 等危险协议。
 - **CSP**：保留 `index.html` 中的 `Content-Security-Policy: script-src 'self'`。不要添加 `unsafe-eval` 或 `unsafe-inline`，除非有明确的安全评估和注释说明理由。
 - **webSecurity**：生产环境禁止关闭 `webPreferences.webSecurity`。开发环境如有跨域调试需求，使用 Vite proxy 而非关闭安全策略。
