@@ -42,6 +42,15 @@ npm run bump-ui         # 将 shadcn/ui 组件更新到最新版本
 - 禁止在 Preload 脚本中暴露 Node.js API。`src/preload.ts` 只做 MessagePort 转发。
 - Renderer 通过 `contextIsolation: true` 与 Node.js 完全隔离，所有后端操作必须走 oRPC IPC。
 
+### Services 层
+
+- `src/services/` 是与 `src/ipc/` **并列**的业务逻辑层，负责处理域逻辑、状态管理和外部服务编排。IPC handlers 只做参数校验和响应封装，**实际业务逻辑委托给 services**。
+- 新增 service 遵循 `src/services/<domain>/` 模式，与 IPC 领域对齐：`index.ts`（导出分组）、`service.ts`（业务逻辑实现）。复杂领域可拆分为 `utils/` 子目录。
+- **职责边界**：
+  - IPC handlers（`src/ipc/<domain>/handlers.ts`）：接收请求、Zod 校验、调用 service、返回响应
+  - Services（`src/services/<domain>/`）：执行业务逻辑、管理内部状态、编排外部依赖（Chat SDK、AcpClient 等）
+  - 禁止 IPC handlers 直接调用外部 SDK 或 AcpClient——统一通过 services 封装
+
 ### 外部依赖边界
 
 - 渠道协议适配、webhook 验签、消息格式化、SlashCommand 事件接收、Modal 交互、Reaction 处理由 **Chat SDK** 提供，AgentLink 不重新实现。线程订阅和 transcripts 消息历史由 Chat SDK 的 SQLite state adapter 持久化。
@@ -74,7 +83,7 @@ npm run bump-ui         # 将 shadcn/ui 组件更新到最新版本
 
 - **简洁优先，避免过度设计**。优先选择简单、可读、实用的方案，不为尚未出现的需求提前抽象。
 - **控制复杂度**。函数和组件保持单一职责，圈复杂度高的代码拆分为小单元。提取可复用的工具函数和 hooks 到 `src/utils/` 或 `src/hooks/`。
-- **模块化设计**。新领域代码参考 `src/ipc/` 的模块结构（`index.ts` + `handlers.ts` + `schemas.ts`），保持一致的代码组织方式。
+- **模块化设计**。新领域代码参考 `src/ipc/` 的模块结构（`index.ts` + `handlers.ts` + `schemas.ts`）和 `src/services/` 的模块结构（`index.ts` + `service.ts`），保持一致的代码组织方式。
 
 ## 架构
 
