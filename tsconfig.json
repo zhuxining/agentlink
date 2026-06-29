@@ -32,5 +32,6 @@
     "./package.json",
     "./forge.config.ts",
     "*.mts"
-  ]
+  ],
+  "exclude": ["src/tests/e2e"]
 }
