@@ -25,6 +25,11 @@ npm run bump-ui         # 将 shadcn/ui 组件更新到最新版本
 - **`src/components/ai-elements/`** — AI Elements 组件库。禁止手动编辑。
 - **`src/routeTree.gen.ts`** — TanStack Router 自动生成的路由树。禁止手动编辑。
 
+### 样式
+
+- 视觉样式（颜色、背景、边框、阴影、字体大小等）统一使用 shadcn/ui 组件和 Tailwind 主题系统（`src/styles/global.css` 中的 CSS 自定义属性）提供的设计 Token。禁止在自定义 CSS class 中新增颜色值或自定义视觉属性。
+- 新增自定义 CSS class 仅用于排版布局（如 flex、grid、间距、定位、尺寸等结构性样式）。
+
 ### 包管理器
 
 - 项目使用 **bun** 作为包管理器，锁文件为 `bun.lock`。不要使用 npm/yarn/pnpm 安装依赖。
