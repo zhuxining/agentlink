@@ -19,6 +19,18 @@
       "skillPath": "skills/hunt/SKILL.md",
       "computedHash": "dac455df1df5baa977517c8c1aa583f8e3ebb5008631ea2d1be5ec3201a0670d"
     },
+    "react-best-practices": {
+      "source": "zhuxining/skills",
+      "sourceType": "github",
+      "skillPath": "react-best-practices/SKILL.md",
+      "computedHash": "18c8a8e8fe8868927601bceab6d68a7293d464ee2bfc8699c3cdf634fa332338"
+    },
+    "tanstack-router": {
+      "source": "tanstack-skills/tanstack-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/tanstack-router/skills/tanstack-router/SKILL.md",
+      "computedHash": "24beccc4016f91bab65547209cfd849ea5e66f3d5d92820683a9dd84669ced56"
+    },
     "think": {
       "source": "tw93/Waza",
       "sourceType": "github",
