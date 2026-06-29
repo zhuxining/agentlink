@@ -66,6 +66,10 @@ npm run bump-ui         # 将 shadcn/ui 组件更新到最新版本
 
 - 使用 Conventional Commits 格式：`type(scope): description`。CHANGELOG 由 git-cliff 根据 commit 自动生成。
 
+### Worktree
+
+- Worktree 统一创建在 `.worktrees/` 目录下。
+
 ## 编码原则
 
 - **简洁优先，避免过度设计**。优先选择简单、可读、实用的方案，不为尚未出现的需求提前抽象。
