@@ -26,7 +26,7 @@ function createWindow() {
     },
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
     trafficLightPosition:
-      process.platform === "darwin" ? { x: 5, y: 5 } : undefined,
+      process.platform === "darwin" ? { x: 13, y: 13 } : undefined,
   });
   ipcContext.setMainWindow(mainWindow);
 

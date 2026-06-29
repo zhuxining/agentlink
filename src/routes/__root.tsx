@@ -9,7 +9,7 @@ function Root() {
     <BaseLayout>
       <Outlet />
       <Activity mode={inDevelopment ? "visible" : "hidden"}>
-        <TanStackRouterDevtools />
+        <TanStackRouterDevtools position="bottom-right" />
       </Activity>
     </BaseLayout>
   );

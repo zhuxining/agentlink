@@ -29,6 +29,7 @@ npm run bump-ui         # 将 shadcn/ui 组件更新到最新版本
 
 - 视觉样式（颜色、背景、边框、阴影、字体大小等）统一使用 shadcn/ui 组件和 Tailwind 主题系统（`src/styles/global.css` 中的 CSS 自定义属性）提供的设计 Token。禁止在自定义 CSS class 中新增颜色值或自定义视觉属性。
 - 新增自定义 CSS class 仅用于排版布局（如 flex、grid、间距、定位、尺寸等结构性样式）。
+- 图标统一使用 `lucide-react` 组件（如 `<X />`、`<Menu />`），禁止内联 `<svg>`、导入 SVG 文件或使用其他图标库。(除了`WindowButtons`组件中使用的Windows图标，其他地方禁止使用 SVG 文件)
 
 ### 包管理器
 
