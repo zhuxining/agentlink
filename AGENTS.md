@@ -111,9 +111,11 @@ Electron Forge 插件（`forge.config.ts`）在构建时协调这三个目标。
 
 - **入口**：`src/app.tsx` 挂载 `<App />`，它同步主题和语言偏好，然后将 `<RouterProvider>` 与 TanStack Router 一起渲染。
 - **路由**：基于文件的，位于 `src/routes/`。`__root.tsx` 是根布局（包裹在 `BaseLayout` 中）。文件由 TanStack Router Vite 插件自动生成到 `src/routeTree.gen.ts`（已自动生成，请勿手动编辑）。路由使用 `createMemoryHistory`（Electron 中无浏览器 URL）。
+- **技能参考**：使用 TanStack Router 时，参考 **tanstack-router** 技能（`.claude/skills/tanstack-router/SKILL.md`）获取类型安全路由、搜索参数、数据加载等最佳实践。
 - **Actions**（`src/actions/`）：封装 IPC 调用的普通函数，供 React 组件使用。每个文件对应一个 IPC 命名空间（`theme.ts`、`window.ts`、`app.ts`、`shell.ts`、`language.ts`）。
 - **布局**：`src/layouts/base-layout.tsx` 包装所有路由，包含一个自定义标题栏（`DragWindowRegion`），在非 macOS 系统上显示窗口控制按钮，在 macOS 上定位红绿灯控件。
 - **组件**：`src/components/` 中的自定义组件 + `src/components/ui/` 中的 shadcn/ui 组件。shadcn 组件被排除在 Biome lint 之外（参见 `biome.jsonc`）。
+- **技能参考**：编写 React 组件时，参考 **react-best-practices** 技能（`.claude/skills/react-best-practices/SKILL.md`）获取渲染优化、性能模式、测试最佳实践等指导。
 - **国际化**：i18next + react-i18next，支持英语和巴西葡萄牙语（`src/localization/`）。语言偏好持久化在 `localStorage` 中。
 
 ### 样式
