@@ -31,4 +31,4 @@ export const configStore = new Store<ConfigSchema>({
   encryptionKey: ENCRYPTION_KEY,
 });
 
-export type { AcpServerEntry, AdapterCredentials, ConfigSchema };
+export type { AdapterCredentials, ConfigSchema };

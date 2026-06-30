@@ -2,11 +2,15 @@ import type { Conversation, Transcript } from "@/ipc/conversation/schemas";
 import { ipc } from "@/ipc/manager";
 
 export function listConversations(): Promise<Conversation[]> {
-  return ipc.client.conversation.listConversations();
+  return ipc.client.conversation.listConversations() as Promise<Conversation[]>;
 }
 export function getConversation(id: string): Promise<Conversation | null> {
-  return ipc.client.conversation.getConversation({ id });
+  return ipc.client.conversation.getConversation({
+    id,
+  }) as Promise<Conversation | null>;
 }
 export function getMessages(conversationId: string): Promise<Transcript[]> {
-  return ipc.client.conversation.getMessages({ conversationId });
+  return ipc.client.conversation.getMessages({ conversationId }) as Promise<
+    Transcript[]
+  >;
 }

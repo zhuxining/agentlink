@@ -6,12 +6,11 @@ import type { EventBridge } from "./event-bridge";
 export type ChatMessageHandler = (ctx: {
   thread: {
     id: string;
-    channel: { name: string };
+    channel: { name: string | null };
     post: (content: unknown) => Promise<unknown>;
-    stream: (content: unknown) => Promise<unknown>;
     subscribe: () => Promise<void>;
   };
-  message: { text: string; author: { fullName: string }; isMention: boolean };
+  message: { text: string; author: { fullName: string }; isMention?: boolean };
 }) => Promise<void>;
 
 export class ChatService {
@@ -106,15 +105,14 @@ export class ChatService {
     const processMessage = async (
       thread: {
         id: string;
-        channel: { name: string };
+        channel: { name: string | null };
         post: (c: unknown) => Promise<unknown>;
-        stream: (c: unknown) => Promise<unknown>;
         subscribe: () => Promise<void>;
       },
       message: {
         text: string;
         author: { fullName: string };
-        isMention: boolean;
+        isMention?: boolean;
       }
     ) => {
       const adapter = thread.channel.name ?? "unknown";
@@ -126,7 +124,7 @@ export class ChatService {
           text: message.text,
           authorName: message.author.fullName,
           channelName: thread.channel.name,
-          isMention: message.isMention,
+          isMention: message.isMention ?? false,
         },
       });
       this.saveTranscript(thread.id, adapter, "user", message.text);

@@ -58,7 +58,7 @@ const config: ForgeConfig = {
       ],
     }),
 
-    new AutoUnpackNativesPlugin(),
+    new AutoUnpackNativesPlugin({}),
 
     new FusesPlugin({
       version: FuseVersion.V1,

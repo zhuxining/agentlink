@@ -8,6 +8,8 @@ import { type AcpServerEntry, configStore } from "@/services/persistence";
 import { AcpSessionMapper } from "./acp-session-mapper";
 import { createStdioStream } from "./acp-transport";
 
+export type { AcpServerEntry as AcpServerConfig } from "@/services/persistence";
+
 interface ActiveConnection {
   process: ChildProcess;
   shutdown: () => void;

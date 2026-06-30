@@ -33,5 +33,9 @@
     "./forge.config.ts",
     "*.mts"
   ],
-  "exclude": ["src/tests/e2e"]
+  "exclude": [
+    "src/tests/e2e",
+    "src/components/ai-elements",
+    "src/components/ui"
+  ]
 }
