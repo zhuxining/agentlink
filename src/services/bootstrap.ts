@@ -13,28 +13,20 @@ export async function bootstrapServices(): Promise<AppServices> {
   const chatService = new ChatService(registry, eventBridge);
   const acpService = new AcpService();
 
-  // Map threadId → thread so the chunk handler can stream text back to IM.
-  const activeThreads = new Map<
-    string,
-    { stream(content: unknown): Promise<unknown> }
-  >();
+  // Collect ACP chunks per thread, then post when turn completes
+  const pendingReplies = new Map<string, string[]>();
 
-  // Wire AcpService chunks → IM thread streaming + event emission
   acpService.setChunkHandler(async (threadId: string, text: string) => {
+    const chunks = pendingReplies.get(threadId);
+    if (chunks) {
+      chunks.push(text);
+    }
     eventBridge.emit({
       type: "acp_session_update",
       sessionId: "",
       threadId,
       text,
     });
-    const thread = activeThreads.get(threadId);
-    if (thread) {
-      try {
-        await thread.stream(text);
-      } catch (err) {
-        console.error("[bootstrap] stream error:", err);
-      }
-    }
   });
 
   // Wire ChatService messages → ACP Server
@@ -45,16 +37,36 @@ export async function bootstrapServices(): Promise<AppServices> {
       await thread.post("未配置 ACP Server，请在设置中添加。");
       return;
     }
+
     const serverId = servers[0].id;
-    activeThreads.set(thread.id, thread);
+    pendingReplies.set(thread.id, []);
     try {
       await acpService.sendPrompt({
         serverId,
         threadId: thread.id,
         prompt: message.text,
       });
+
+      // 发送收集到的回复
+      const chunks = pendingReplies.get(thread.id);
+      if (chunks && chunks.length > 0) {
+        const reply = chunks.join("");
+        await thread.post(reply);
+        eventBridge.emit({
+          type: "message_sent",
+          threadId: thread.id,
+          adapter: thread.channel.name ?? "unknown",
+          text: reply,
+        });
+      } else {
+        await thread.post("（ACP Agent 未返回响应）");
+      }
+    } catch (err) {
+      await thread.post(
+        `Error: ${err instanceof Error ? err.message : String(err)}`
+      );
     } finally {
-      activeThreads.delete(thread.id);
+      pendingReplies.delete(thread.id);
     }
   });
 
