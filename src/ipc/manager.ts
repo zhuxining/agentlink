@@ -10,11 +10,11 @@ class IPCManager {
   private readonly clientPort: MessagePort;
   private readonly serverPort: MessagePort;
 
-  private readonly rpcLink: RPCLink<ClientContext>;
+  private rpcLink: RPCLink<ClientContext> | null = null;
 
-  private initialized = false;
-
-  readonly client: RPCClient;
+  private _client: RPCClient | null = null;
+  private _ready: Promise<void>;
+  private _resolveReady!: () => void;
 
   constructor() {
     const { port1: clientChannelPort, port2: serverChannelPort } =
@@ -22,23 +22,52 @@ class IPCManager {
     this.clientPort = clientChannelPort;
     this.serverPort = serverChannelPort;
 
-    this.rpcLink = new RPCLink({
-      port: this.clientPort,
+    this._ready = new Promise((resolve) => {
+      this._resolveReady = resolve;
     });
-    this.client = createORPCClient(this.rpcLink);
+
+    // Initialize asynchronously so MessageChannel transfer doesn't
+    // race with the first IPC call made by any component.
+    queueMicrotask(() => {
+      this.initialize();
+    });
   }
 
-  initialize() {
-    if (this.initialized) {
+  /** The oRPC client. Calls trigger lazy initialization. */
+  get client(): RPCClient {
+    if (!this._client) {
+      this.initialize();
+    }
+    return this._client!;
+  }
+
+  /** Wait for the IPC bridge to be fully set up. */
+  ready(): Promise<void> {
+    return this._ready;
+  }
+
+  private initialize(): void {
+    if (this._client) {
       return;
     }
 
+    this.rpcLink = new RPCLink({
+      port: this.clientPort,
+    });
+    this._client = createORPCClient(this.rpcLink);
+
     this.clientPort.start();
 
+    // Transfer serverPort to main process via preload bridge.
+    // This neuters serverPort but clientPort stays usable.
     window.postMessage(IPC_CHANNELS.START_ORPC_SERVER, "*", [this.serverPort]);
-    this.initialized = true;
+
+    // Signal ready on next microtask so the MessageChannel has
+    // settled after the transfer.
+    queueMicrotask(() => {
+      this._resolveReady();
+    });
   }
 }
 
 export const ipc = new IPCManager();
-ipc.initialize();
