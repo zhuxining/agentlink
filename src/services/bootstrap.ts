@@ -72,15 +72,21 @@ export async function bootstrapServices(): Promise<AppServices> {
   const chatService = new ChatService(registry, eventBridge);
   const acpService = new AcpService();
 
-  // 尝试加载 .env.dev 开发配置
+  // 尝试加载 .env.dev 开发配置（仅在 configStore 为空时加载）
   const dev = loadDevConfig();
   if (dev) {
-    console.log("[dev] Loading dev config from .env.dev");
-    if (dev.adapters.lark) {
-      await registry.enable("lark", dev.adapters.lark.env);
-    }
-    for (const srv of dev.acpServers ?? []) {
-      acpService.addServer(srv);
+    const existingServers = acpService.getServers();
+    const existingAdapters = registry.list().filter((a) => a.enabled);
+    if (existingServers.length === 0 && existingAdapters.length === 0) {
+      console.log("[dev] Loading dev config from .env.dev");
+      if (dev.adapters.lark) {
+        await registry.enable("lark", dev.adapters.lark.env);
+      }
+      for (const srv of dev.acpServers ?? []) {
+        acpService.addServer(srv);
+      }
+    } else {
+      console.log("[dev] Config already initialized, skipping .env.dev");
     }
   }
 
