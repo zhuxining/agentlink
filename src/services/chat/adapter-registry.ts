@@ -49,15 +49,13 @@ export class AdapterRegistry {
     return this.list().find((a) => a.slug === slug);
   }
 
-  // biome-ignore lint/suspicious/useAwait: async per spec contract for future async init
-  async enable(slug: string, env: Record<string, string>): Promise<void> {
+  enable(slug: string, env: Record<string, string>): void {
     const creds = configStore.get("adapters", {});
     creds[slug] = { env, enabled: true };
     configStore.set("adapters", creds);
   }
 
-  // biome-ignore lint/suspicious/useAwait: async per spec contract for future async init
-  async disable(slug: string): Promise<void> {
+  disable(slug: string): void {
     const creds = configStore.get("adapters", {});
     if (creds[slug]) {
       creds[slug].enabled = false;
