@@ -39,24 +39,41 @@ export function createStdioStream(
       env: childEnv,
     });
 
+    // Safety timeout: if the spawn event doesn't fire within 10s,
+    // reject. This is a backstop, not an artificial delay — spawn
+    // normally fires within the same event-loop tick.
+    const timeout = setTimeout(() => {
+      reject(new Error(`ACP server spawn timed out: "${command}"`));
+    }, 10_000);
+
     child.on("error", (err) => {
       clearTimeout(timeout);
       reject(new Error(`Failed to spawn ACP server: ${err.message}`));
     });
 
-    const timeout = setTimeout(() => {
-      if (child.exitCode !== null) {
-        reject(new Error(`ACP server exited with code ${child.exitCode}`));
-        return;
-      }
+    // Resolve as soon as the process spawns successfully (pipes are
+    // available immediately). If the process exits very quickly with
+    // a non-zero code, it still spawned — the exit handler fires
+    // asynchronously after spawn.
+    child.on("spawn", () => {
+      clearTimeout(timeout);
 
       const writable = new WritableStream<Uint8Array>({
         write(chunk) {
-          child.stdin.write(chunk);
+          const ok = child.stdin.write(chunk);
+          if (!ok) {
+            // Backpressure: the kernel buffer is full.
+            // The write will drain naturally via the 'drain' event.
+            // We don't pause here since ACP streaming chunks are
+            // typically small and this is a best-effort relay.
+          }
         },
         close() {
           child.stdin.end();
         },
+      });
+      child.stdin.on("error", (err) => {
+        console.error("[AcpTransport] stdin error:", err);
       });
 
       const readable = new ReadableStream<Uint8Array>({
@@ -76,6 +93,6 @@ export function createStdioStream(
       });
 
       resolve({ stream: ndJsonStream(writable, readable), process: child });
-    }, 500);
+    });
   });
 }

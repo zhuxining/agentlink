@@ -3,6 +3,7 @@ import type { AcpServerStatus } from "./schemas";
 import {
   addAcpServerInputSchema,
   connectAcpServerInputSchema,
+  disconnectAcpServerInputSchema,
   removeAcpServerInputSchema,
 } from "./schemas";
 
@@ -55,7 +56,7 @@ export const connectAcpServer = os
   });
 
 export const disconnectAcpServer = os
-  .input(connectAcpServerInputSchema)
+  .input(disconnectAcpServerInputSchema)
   .handler(({ input }) => {
     getServices().acpService.disconnect(input.id);
     return { success: true };

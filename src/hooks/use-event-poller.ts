@@ -35,7 +35,7 @@ export function useEventPoller() {
               queryClient.invalidateQueries({ queryKey: ["channels"] });
               break;
             case "acp_server_status_changed":
-              queryClient.invalidateQueries({ queryKey: ["acp-servers"] });
+              queryClient.invalidateQueries({ queryKey: ["acp", "servers"] });
               break;
             default:
               break;

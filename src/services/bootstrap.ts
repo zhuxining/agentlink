@@ -74,6 +74,11 @@ export async function bootstrapServices(): Promise<AppServices> {
   const chatService = new ChatService(registry, eventBridge);
   const acpService = new AcpService();
 
+  // Wire ACP status changes to the event bridge so the UI can react.
+  acpService.setEventHandler((event) => {
+    eventBridge.emit(event);
+  });
+
   // 尝试加载 .env.dev 开发配置（仅在 configStore 为空时加载）
   const dev = loadDevConfig();
   if (dev) {
@@ -152,17 +157,17 @@ export async function bootstrapServices(): Promise<AppServices> {
   // Initialize ChatService (starts enabled adapters)
   await chatService.initialize();
 
-  // Auto-connect configured ACP Servers
-  for (const server of acpService.getServers()) {
-    try {
-      await acpService.connect(server.id);
-    } catch (err) {
-      console.error(
-        `[bootstrap] Failed to connect ACP server "${server.id}":`,
-        err
-      );
-    }
-  }
+  // Auto-connect configured ACP Servers (parallel for faster startup)
+  await Promise.all(
+    acpService.getServers().map((server) =>
+      acpService.connect(server.id).catch((err) => {
+        console.error(
+          `[bootstrap] Failed to connect ACP server "${server.id}":`,
+          err
+        );
+      })
+    )
+  );
 
   // Register event collector if available (created in Task 6)
   try {

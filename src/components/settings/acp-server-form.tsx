@@ -12,7 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAddAcpServer } from "@/hooks/use-acp-servers";
 
-const WHITESPACE_RE = /\s+/;
+/** 支持双引号、单引号的简易 shell 分割实现 */
+function splitArgs(input: string): string[] {
+  const args: string[] = [];
+  const re = /[^\s"']+|["']([^"']*)["']/g;
+  const trimmed = input.trim();
+  let match: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: required for regex exec in loop
+  while ((match = re.exec(trimmed)) !== null) {
+    args.push(match[1] ?? match[0]);
+  }
+  return args;
+}
 
 interface Props {
   onOpenChange: (open: boolean) => void;
@@ -27,7 +38,7 @@ export function AcpServerForm({ open, onOpenChange }: Props) {
 
   const handleAdd = async () => {
     const id = `acp-${Date.now()}`;
-    const args = argsStr.split(WHITESPACE_RE).filter(Boolean);
+    const args = splitArgs(argsStr);
     await mutation.mutateAsync({ id, name, command, args });
     setName("");
     setCommand("");

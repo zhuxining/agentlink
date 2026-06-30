@@ -4,6 +4,7 @@ import type {
   RequestPermissionResponse,
 } from "@agentclientprotocol/sdk";
 import { client } from "@agentclientprotocol/sdk";
+import type { AppEvent } from "@/services/chat/event-bridge";
 import { type AcpServerEntry, configStore } from "@/services/persistence";
 import { AcpSessionMapper } from "./acp-session-mapper";
 import { createStdioStream } from "./acp-transport";
@@ -15,6 +16,14 @@ interface ActiveConnection {
   shutdown: () => void;
 }
 
+// Track detailed connection state for getServerStatus.
+// During async connect(), status goes connecting → connected.
+// On error/disconnect, status goes to disconnected or error.
+const connectionStatus = new Map<
+  string,
+  "disconnected" | "connecting" | "connected" | "error"
+>();
+
 // Maps ACP sessionId back to Chat SDK threadId so the
 // session/update notification handler can route text chunks.
 const sessionToThread = new Map<string, string>();
@@ -24,6 +33,7 @@ export class AcpService {
   private readonly contexts = new Map<string, ClientContext>();
   private readonly sessionMapper = new AcpSessionMapper();
   private onChunk: ((threadId: string, text: string) => void) | null = null;
+  private onEvent: ((event: AppEvent) => void) | null = null;
 
   /**
    * Register a handler to receive streaming text chunks.
@@ -32,6 +42,13 @@ export class AcpService {
    */
   setChunkHandler(handler: (threadId: string, text: string) => void): void {
     this.onChunk = handler;
+  }
+
+  /**
+   * Register a handler for status change events so the UI can react.
+   */
+  setEventHandler(handler: (event: AppEvent) => void): void {
+    this.onEvent = handler;
   }
 
   /** Return all configured ACP server entries from the config store. */
@@ -62,7 +79,7 @@ export class AcpService {
   getServerStatus(
     id: string
   ): "disconnected" | "connecting" | "connected" | "error" {
-    return this.connections.has(id) ? "connected" : "disconnected";
+    return connectionStatus.get(id) ?? "disconnected";
   }
 
   /**
@@ -97,6 +114,21 @@ export class AcpService {
     const shutdownPromise = new Promise<void>((r) => {
       shutdownResolve = r;
     });
+
+    // readyPromise / readyReject — resolves once connectWith's
+    // callback fires (handshake OK), rejects if connectWith itself
+    // fails (handshake error). This lets connect() await the
+    // handshake without blocking on shutdownPromise.
+    let onReady!: () => void;
+    let onReadyReject!: (err: unknown) => void;
+    const readyPromise = new Promise<void>((resolve, reject) => {
+      onReady = resolve;
+      onReadyReject = reject;
+    });
+
+    // Notify UI: connecting
+    connectionStatus.set(id, "connecting");
+    this.emitStatusEvent(id, "connecting");
 
     // Register session/update notification handler — extracts
     // agent_message_chunk text and forwards it via onChunk.
@@ -133,29 +165,47 @@ export class AcpService {
     // connectWith keeps the connection open while the callback
     // runs. The callback blocks on shutdownPromise so the
     // connection stays alive until disconnect() is called.
+    // We intentionally do NOT await connectWith — it only resolves
+    // after disconnect() resolves shutdownPromise.
     app
       .connectWith(stream, async (ctx: ClientContext) => {
         this.contexts.set(id, ctx);
+        this.connections.set(id, {
+          process,
+          shutdown: shutdownResolve,
+        });
+        onReady();
         await shutdownPromise;
       })
       .catch((err) => {
         console.error(`[AcpService] Connection to "${id}" failed:`, err);
         this.contexts.delete(id);
         this.connections.delete(id);
+        connectionStatus.set(id, "error");
+        this.emitStatusEvent(
+          id,
+          "error",
+          err instanceof Error ? err.message : String(err)
+        );
         process.kill();
+        onReadyReject(err);
       });
 
     process.on("exit", (code) => {
       console.log(`[AcpService] Server "${id}" exited (${code})`);
       this.contexts.delete(id);
       this.connections.delete(id);
+      connectionStatus.set(id, "disconnected");
+      this.emitStatusEvent(id, "disconnected");
     });
 
-    this.connections.set(id, {
-      process,
-      shutdown: shutdownResolve,
-    });
+    // Wait for the ACP handshake to complete or fail.
+    // readyPromise resolves once connectWith's callback fires;
+    // it rejects if connectWith itself fails (handshake error).
+    await readyPromise;
 
+    connectionStatus.set(id, "connected");
+    this.emitStatusEvent(id, "connected");
     console.log(`[AcpService] Connected to "${id}"`);
   }
 
@@ -168,6 +218,22 @@ export class AcpService {
     }
     this.connections.delete(id);
     this.contexts.delete(id);
+    connectionStatus.set(id, "disconnected");
+    this.emitStatusEvent(id, "disconnected");
+  }
+
+  // ── Event emission ─────────────────────────────────────────────
+  private emitStatusEvent(
+    serverId: string,
+    status: "connecting" | "connected" | "disconnected" | "error",
+    error?: string
+  ): void {
+    this.onEvent?.({
+      type: "acp_server_status_changed",
+      serverId,
+      status,
+      error,
+    });
   }
 
   /**
@@ -205,16 +271,18 @@ export class AcpService {
     // Wire sessionId -> threadId for the onNotification handler.
     sessionToThread.set(sessionId, params.threadId);
 
-    // Send the prompt. This blocks until the turn completes.
-    // Text chunks arrive asynchronously via session/update
-    // notifications handled by the onNotification handler above.
-    const response = await session.prompt(params.prompt);
+    try {
+      // Send the prompt. This blocks until the turn completes.
+      // Text chunks arrive asynchronously via session/update
+      // notifications handled by the onNotification handler above.
+      const response = await session.prompt(params.prompt);
 
-    // Clean up the routing map and session subscription.
-    sessionToThread.delete(sessionId);
-    session.dispose();
-
-    return { sessionId, stopReason: response.stopReason };
+      return { sessionId, stopReason: response.stopReason };
+    } finally {
+      // Clean up the routing map and session subscription.
+      sessionToThread.delete(sessionId);
+      session.dispose();
+    }
   }
 
   /** Disconnect from all active ACP server connections. */
