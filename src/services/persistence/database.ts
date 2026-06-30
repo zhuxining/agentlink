@@ -8,6 +8,9 @@ export function getDatabase(): Database.Database {
   if (db) {
     return db;
   }
+  if (!app.isReady()) {
+    throw new Error("Database cannot be accessed before app.whenReady()");
+  }
   const dbPath = path.join(app.getPath("userData"), "agentlink.db");
   db = new Database(dbPath);
   db.pragma("journal_mode = WAL");
