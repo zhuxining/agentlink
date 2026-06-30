@@ -60,9 +60,9 @@ export class AcpService {
 
   /** Get the connection status for an ACP server. */
   getServerStatus(
-    _id: string
+    id: string
   ): "disconnected" | "connecting" | "connected" | "error" {
-    return this.connections.has(_id) ? "connected" : "disconnected";
+    return this.connections.has(id) ? "connected" : "disconnected";
   }
 
   /**
@@ -133,10 +133,17 @@ export class AcpService {
     // connectWith keeps the connection open while the callback
     // runs. The callback blocks on shutdownPromise so the
     // connection stays alive until disconnect() is called.
-    app.connectWith(stream, async (ctx: ClientContext) => {
-      this.contexts.set(id, ctx);
-      await shutdownPromise;
-    });
+    app
+      .connectWith(stream, async (ctx: ClientContext) => {
+        this.contexts.set(id, ctx);
+        await shutdownPromise;
+      })
+      .catch((err) => {
+        console.error(`[AcpService] Connection to "${id}" failed:`, err);
+        this.contexts.delete(id);
+        this.connections.delete(id);
+        process.kill();
+      });
 
     process.on("exit", (code) => {
       console.log(`[AcpService] Server "${id}" exited (${code})`);
@@ -203,8 +210,9 @@ export class AcpService {
     // notifications handled by the onNotification handler above.
     const response = await session.prompt(params.prompt);
 
-    // Clean up the routing map.
+    // Clean up the routing map and session subscription.
     sessionToThread.delete(sessionId);
+    session.dispose();
 
     return { sessionId, stopReason: response.stopReason };
   }
