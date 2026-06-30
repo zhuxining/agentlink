@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { app, safeStorage } from "electron";
 import Store from "electron-store";
@@ -28,29 +28,36 @@ interface ConfigSchema {
  * On subsequent runs, reads and decrypts that file.
  */
 function getEncryptionKey(): string {
-  const keyFile = join(app.getPath("userData"), "agentlink-key.enc");
+  const userDataDir = app.getPath("userData");
+  const keyFile = join(userDataDir, "agentlink-key.enc");
+  const configFile = join(userDataDir, "agentlink-config.json");
 
   if (existsSync(keyFile)) {
-    // Existing install — decrypt persisted key.
+    // Existing safeStorage install — decrypt persisted key.
     const encrypted = readFileSync(keyFile);
     if (safeStorage.isEncryptionAvailable()) {
       return safeStorage.decryptString(encrypted);
     }
-    // Fallback: if safeStorage was available before but now isn't
-    // (e.g. headless environment after initial setup), use the raw
-    // buffer as hex. This preserves read-access to existing config.
     return encrypted.toString("hex");
   }
 
-  // Fresh install — generate a random key and encrypt with safeStorage.
+  // Fresh install (no key.enc) — but old config.json may exist from
+  // before the safeStorage migration. Overwrite it so it gets
+  // recreated with the new key below.
+  if (existsSync(configFile)) {
+    try {
+      unlinkSync(configFile);
+    } catch {
+      // best-effort; Store will overwrite it anyway
+    }
+  }
+
+  // Generate a random key and encrypt with safeStorage.
   const raw = crypto.randomBytes(32).toString("hex");
   if (safeStorage.isEncryptionAvailable()) {
     const encrypted = safeStorage.encryptString(raw);
     writeFileSync(keyFile, encrypted);
   }
-  // If safeStorage is unavailable (e.g. headless test), just use the
-  // random key without encrypting it to disk — still better than a
-  // hardcoded hash because the key is per-install unique.
   return raw;
 }
 
