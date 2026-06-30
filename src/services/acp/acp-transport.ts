@@ -12,29 +12,8 @@ export function createStdioStream(
   args: string[],
   env?: Record<string, string>
 ): Promise<AcpTransport> {
-  // 仅传递 ACP Server 必需的环境变量，避免泄漏 host 凭据
-  const allowedKeys = new Set([
-    "PATH",
-    "HOME",
-    "SHELL",
-    "NODE_PATH",
-    "CLICOLOR",
-    "FORCE_COLOR",
-    "TERM",
-    "LANG",
-    "LC_ALL",
-    "TZ",
-  ]);
-  const childEnv: Record<string, string> = {};
-  for (const key of allowedKeys) {
-    const val = process.env[key];
-    if (val) {
-      childEnv[key] = val;
-    }
-  }
-  if (env) {
-    Object.assign(childEnv, env);
-  }
+  // 传给 ACP Server 完整的当前环境变量，加上用户自定义 env
+  const childEnv = { ...process.env, ...env };
 
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
