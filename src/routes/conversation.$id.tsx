@@ -1,3 +1,4 @@
+// biome-ignore lint/style/useFilenamingConvention: $id is TanStack Router dynamic route param
 import { createFileRoute } from "@tanstack/react-router";
 import { MessagePanel } from "@/components/conversation/message-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
