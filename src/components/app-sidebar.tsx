@@ -1,6 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import {
-  BookOpen,
   ExternalLink,
   House,
   MessageCircle,
@@ -45,7 +44,6 @@ export default function AppSidebar({
     { title: "对话", to: "/conversation" as const, icon: MessageCircle },
     { title: "渠道", to: "/channel" as const, icon: Plug },
     { title: "设置", to: "/settings" as const, icon: Settings },
-    { title: t("titleSecondPage"), to: "/second" as const, icon: BookOpen },
     {
       title: t("documentation"),
       to: "https://docs.luanroger.dev/agentlink",

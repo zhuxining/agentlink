@@ -90,6 +90,21 @@ app.on("window-all-closed", () => {
   }
 });
 
+app.on("before-quit", async () => {
+  const services = (globalThis as Record<string, unknown>).__services as
+    | {
+        chatService: { shutdown: () => Promise<void> };
+        acpService: { disconnectAll: () => void };
+      }
+    | undefined;
+  if (services) {
+    await services.chatService.shutdown();
+    services.acpService.disconnectAll();
+  }
+  const { closeDatabase } = await import("./services/persistence/database");
+  closeDatabase();
+});
+
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();

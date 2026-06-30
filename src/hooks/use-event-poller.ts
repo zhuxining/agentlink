@@ -19,8 +19,31 @@ export function useEventPoller() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ["events", "recent"] });
+    intervalRef.current = setInterval(async () => {
+      // 拉取事件并自动 invalidate 相关 query
+      try {
+        const events = await getRecentEvents();
+        for (const event of events) {
+          switch (event.type) {
+            case "message_received":
+            case "message_sent":
+            case "agent_error":
+              queryClient.invalidateQueries({ queryKey: ["conversations"] });
+              queryClient.invalidateQueries({ queryKey: ["messages"] });
+              break;
+            case "adapter_status_changed":
+              queryClient.invalidateQueries({ queryKey: ["channels"] });
+              break;
+            case "acp_server_status_changed":
+              queryClient.invalidateQueries({ queryKey: ["acp-servers"] });
+              break;
+            default:
+              break;
+          }
+        }
+      } catch {
+        /* ignore poll errors */
+      }
     }, POLL_INTERVAL);
 
     return () => {
