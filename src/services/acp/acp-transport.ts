@@ -12,8 +12,26 @@ export function createStdioStream(
   args: string[],
   env?: Record<string, string>
 ): Promise<AcpTransport> {
-  // 传给 ACP Server 完整的当前环境变量，加上用户自定义 env
-  const childEnv = { ...process.env, ...env };
+  // 过滤危险环境变量，同时保留 API key 等必要变量
+  const blockPrefixes = [
+    "LD_",
+    "DYLD_",
+    "BASH_ENV",
+    "NODE_OPTIONS",
+    "PYTHONPATH",
+    "PERL5OPT",
+    "RUBYOPT",
+  ];
+  const childEnv: Record<string, string> = {};
+  for (const [key, val] of Object.entries(process.env)) {
+    const isBlocked = blockPrefixes.some((p) => key.startsWith(p));
+    if (!isBlocked && val !== undefined) {
+      childEnv[key] = val;
+    }
+  }
+  if (env) {
+    Object.assign(childEnv, env);
+  }
 
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
