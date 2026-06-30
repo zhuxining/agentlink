@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { AcpService } from "./acp";
 import { AdapterRegistry, ChatService, EventBridge } from "./chat";
 
@@ -7,11 +9,80 @@ export interface AppServices {
   eventBridge: EventBridge;
 }
 
+/** 从 .env.dev 读取开发环境配置 */
+function loadDevConfig(): {
+  adapters: Record<string, { env: Record<string, string> }>;
+  acpServers: Array<{
+    id: string;
+    name: string;
+    command: string;
+    args: string[];
+  }>;
+} | null {
+  const envPath = join(process.cwd(), ".env.dev");
+  if (!existsSync(envPath)) {
+    return null;
+  }
+
+  const content = readFileSync(envPath, "utf-8");
+  const vars: Record<string, string> = {};
+  for (const line of content.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) {
+      continue;
+    }
+    vars[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+  }
+  if (!vars.AGENTLINK_DEV) {
+    return null;
+  }
+
+  const config: ReturnType<typeof loadDevConfig> = {
+    adapters: {},
+    acpServers: [],
+  };
+
+  if (vars.LARK_APP_ID && vars.LARK_APP_SECRET) {
+    config.adapters.lark = {
+      env: {
+        LARK_APP_ID: vars.LARK_APP_ID,
+        LARK_APP_SECRET: vars.LARK_APP_SECRET,
+      },
+    };
+  }
+  if (vars.ACP_SERVER_PI_COMMAND && vars.ACP_SERVER_PI_ARGS) {
+    config.acpServers?.push({
+      id: "pi",
+      name: "PI Agent",
+      command: vars.ACP_SERVER_PI_COMMAND,
+      args: vars.ACP_SERVER_PI_ARGS.split(/\s+/).filter(Boolean),
+    });
+  }
+
+  return config;
+}
+
 export async function bootstrapServices(): Promise<AppServices> {
   const eventBridge = new EventBridge();
   const registry = new AdapterRegistry();
   const chatService = new ChatService(registry, eventBridge);
   const acpService = new AcpService();
+
+  // 尝试加载 .env.dev 开发配置
+  const dev = loadDevConfig();
+  if (dev) {
+    console.log("[dev] Loading dev config from .env.dev");
+    if (dev.adapters.lark) {
+      await registry.enable("lark", dev.adapters.lark.env);
+    }
+    for (const srv of dev.acpServers ?? []) {
+      acpService.addServer(srv);
+    }
+  }
 
   // Collect ACP chunks per thread, then post when turn completes
   const pendingReplies = new Map<string, string[]>();
