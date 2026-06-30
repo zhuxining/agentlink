@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { AcpService } from "./acp";
 import { AdapterRegistry, ChatService, EventBridge } from "./chat";
 
+const WHITESPACE_RE = /\s+/;
+
 export interface AppServices {
   acpService: AcpService;
   chatService: ChatService;
@@ -59,7 +61,7 @@ function loadDevConfig(): {
       id: "pi",
       name: "PI Agent",
       command: vars.ACP_SERVER_PI_COMMAND,
-      args: vars.ACP_SERVER_PI_ARGS.split(/\s+/).filter(Boolean),
+      args: vars.ACP_SERVER_PI_ARGS.split(WHITESPACE_RE).filter(Boolean),
     });
   }
 
