@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/performance/noBarrelFile: intentional public API surface for the persistence module */
+
 export type {
   AcpServerEntry,
   AdapterCredentials,

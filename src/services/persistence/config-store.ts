@@ -5,7 +5,7 @@ interface AdapterCredentials {
   [slug: string]: { env: Record<string, string>; enabled: boolean };
 }
 
-interface AcpServerEntry {
+export interface AcpServerEntry {
   args: string[];
   command: string;
   env?: Record<string, string>;
