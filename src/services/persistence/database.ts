@@ -1,0 +1,44 @@
+import path from "node:path";
+import Database from "better-sqlite3";
+import { app } from "electron";
+
+let db: Database.Database | null = null;
+
+export function getDatabase(): Database.Database {
+  if (db) {
+    return db;
+  }
+  const dbPath = path.join(app.getPath("userData"), "agentlink.db");
+  db = new Database(dbPath);
+  db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS conversations (
+      id TEXT PRIMARY KEY,
+      adapter TEXT NOT NULL,
+      agent_id TEXT,
+      acp_server_id TEXT,
+      acp_session_id TEXT,
+      title TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS transcripts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+      role TEXT NOT NULL CHECK(role IN ('user','agent')),
+      content TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_conv_updated ON conversations(updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_trans_conv ON transcripts(conversation_id, created_at);
+  `);
+  return db;
+}
+
+export function closeDatabase(): void {
+  if (db) {
+    db.close();
+    db = null;
+  }
+}
