@@ -12,6 +12,7 @@
     "publish": "electron-forge publish",
     "check": "ultracite check",
     "fix": "ultracite fix",
+    "check-types": "tsgo --noEmit",
     "bump-ui": "tsx ./scripts/bump-ui.ts",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -83,6 +84,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260629.1",
     "@electron-forge/cli": "^7.11.2",
     "@electron-forge/maker-deb": "^7.11.2",
     "@electron-forge/maker-rpm": "^7.11.2",

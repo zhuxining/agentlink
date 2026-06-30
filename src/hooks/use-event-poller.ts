@@ -53,5 +53,3 @@ export function useEventPoller() {
     };
   }, [queryClient]);
 }
-
-export type { AppEvent };
