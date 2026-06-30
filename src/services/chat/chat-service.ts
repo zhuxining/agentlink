@@ -151,9 +151,9 @@ export class ChatService {
     chat.onDirectMessage(async (thread, message) => {
       await processMessage(thread, message);
     });
-    chat.onSubscribedMessage((thread, message) => {
+    chat.onSubscribedMessage(async (thread, message) => {
       if (message.isMention) {
-        processMessage(thread, message);
+        await processMessage(thread, message);
       }
     });
   }
