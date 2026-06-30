@@ -18,12 +18,12 @@ export default function BaseLayout({
       <SidebarProvider className="min-h-0 flex-1" defaultOpen>
         <TooltipProvider>
           <AppSidebar />
-          <SidebarInset>
+          <SidebarInset className="min-h-0">
             <DragWindowRegion title="agentlink" />
             <div className="flex h-10 items-center px-4 md:hidden">
               <SidebarTrigger />
             </div>
-            <div className="flex-1 p-6 pt-0">{children}</div>
+            <div className="min-h-0 flex-1 p-6 pt-0">{children}</div>
           </SidebarInset>
         </TooltipProvider>
       </SidebarProvider>

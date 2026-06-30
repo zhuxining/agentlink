@@ -1,5 +1,11 @@
-import { useLocation, useNavigate } from "@tanstack/react-router";
-import { BookOpen, ExternalLink, House } from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
+import {
+  ExternalLink,
+  House,
+  MessageCircle,
+  Plug,
+  Settings,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { openExternalLink } from "@/actions/shell";
 import LangToggle from "@/components/lang-toggle";
@@ -25,7 +31,6 @@ export default function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isMobile, state } = useSidebar();
   const platform = usePlatform();
@@ -35,13 +40,15 @@ export default function AppSidebar({
   const showTrafficLightSpace = isMacOS && isExpanded && !isMobile;
 
   const navItems = [
-    { title: t("titleHomePage"), to: "/", icon: House },
-    { title: t("titleSecondPage"), to: "/second", icon: BookOpen },
+    { title: t("titleHomePage"), to: "/" as const, icon: House },
+    { title: "对话", to: "/conversation" as const, icon: MessageCircle },
+    { title: "渠道", to: "/channel" as const, icon: Plug },
+    { title: "设置", to: "/settings" as const, icon: Settings },
     {
       title: t("documentation"),
       to: "https://docs.luanroger.dev/agentlink",
       icon: ExternalLink,
-      external: true,
+      external: true as const,
     },
   ];
 
@@ -50,7 +57,7 @@ export default function AppSidebar({
       <SidebarHeader
         className={cn(
           "group draglayer flex h-10 flex-row items-center justify-between p-0",
-          showTrafficLightSpace ? "pl-[84px]" : "pl-2"
+          showTrafficLightSpace ? "pl-21" : "pl-2"
         )}
       >
         <SidebarTrigger
@@ -63,24 +70,30 @@ export default function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton
-                    isActive={"external" in item ? false : pathname === item.to}
-                    onClick={() => {
-                      if ("external" in item) {
-                        openExternalLink(item.to);
-                      } else {
-                        navigate({ to: item.to });
-                      }
-                    }}
-                    tooltip={item.title}
-                  >
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navItems.map((item) =>
+                "external" in item ? (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton
+                      onClick={() => openExternalLink(item.to)}
+                      tooltip={item.title}
+                    >
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : (
+                  <SidebarMenuItem key={item.to}>
+                    <Link
+                      className="flex w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                      data-active={pathname === item.to}
+                      to={item.to}
+                    >
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuItem>
+                )
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

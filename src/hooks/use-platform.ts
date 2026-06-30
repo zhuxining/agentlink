@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPlatform } from "@/actions/app";
+import { ipc } from "@/ipc/manager";
 
 function guessPlatform(): string | null {
   if (typeof navigator === "undefined") {
@@ -24,7 +25,10 @@ export function usePlatform() {
   useEffect(() => {
     let active = true;
 
-    getPlatform()
+    // Wait for the IPC bridge to be ready before making any request.
+    ipc
+      .ready()
+      .then(() => getPlatform())
       .then((value) => {
         if (!active) {
           return;

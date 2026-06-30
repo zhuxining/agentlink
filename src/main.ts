@@ -74,6 +74,10 @@ app.whenReady().then(async () => {
     await installExtensions();
     checkForUpdates();
     await setupORPC();
+
+    const { bootstrapServices } = await import("./services/bootstrap");
+    const services = await bootstrapServices();
+    (globalThis as Record<string, unknown>).__services = services;
   } catch (error) {
     console.error("Error during app initialization:", error);
   }
@@ -84,6 +88,21 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+app.on("before-quit", async () => {
+  const services = (globalThis as Record<string, unknown>).__services as
+    | {
+        chatService: { shutdown: () => Promise<void> };
+        acpService: { disconnectAll: () => void };
+      }
+    | undefined;
+  if (services) {
+    await services.chatService.shutdown();
+    services.acpService.disconnectAll();
+  }
+  const { closeDatabase } = await import("./services/persistence/database");
+  closeDatabase();
 });
 
 app.on("activate", () => {
