@@ -4,11 +4,11 @@ import type {
   RequestPermissionResponse,
 } from "@agentclientprotocol/sdk";
 import { client } from "@agentclientprotocol/sdk";
-import { configStore } from "@/services/persistence";
+import { type AcpServerEntry, configStore } from "@/services/persistence";
 import { AcpSessionMapper } from "./acp-session-mapper";
 import { createStdioStream } from "./acp-transport";
 
-export type { AcpServerEntry as AcpServerConfig } from "@/services/persistence";
+export type { AcpServerEntry as AcpServerConfig };
 
 interface ActiveConnection {
   process: ChildProcess;

@@ -93,7 +93,7 @@ export async function bootstrapServices(): Promise<AppServices> {
   // Collect ACP chunks per thread, then post when turn completes
   const pendingReplies = new Map<string, string[]>();
 
-  acpService.setChunkHandler(async (threadId: string, text: string) => {
+  acpService.setChunkHandler((threadId: string, text: string) => {
     const chunks = pendingReplies.get(threadId);
     if (chunks) {
       chunks.push(text);
