@@ -5,7 +5,6 @@ pre-commit:
       glob: "*.{js,ts,jsx,tsx,json,jsonc,css}"
       run: bun run fix
       stage_fixed: true
-    - name: type-check
-      glob: "*.{js,ts,jsx,tsx,json,jsonc,css}"
-      run: bun run type-check
+    - name: check-types
+      run: bun run check-types
       stage_fixed: true
