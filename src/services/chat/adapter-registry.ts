@@ -65,7 +65,7 @@ export class AdapterRegistry {
     }
   }
 
-  buildAdapterMap(): Record<string, Adapter> {
+  async buildAdapterMap(): Promise<Record<string, Adapter>> {
     const map: Record<string, Adapter> = {};
     const creds = configStore.get("adapters", {});
     for (const slug of SUPPORTED) {
@@ -73,6 +73,7 @@ export class AdapterRegistry {
       if (!saved?.enabled) {
         continue;
       }
+      // 适配器从 process.env 读取凭据，需注入后再加载
       const prev: Record<string, string | undefined> = {};
       for (const [k, v] of Object.entries(saved.env)) {
         prev[k] = process.env[k];
@@ -80,12 +81,18 @@ export class AdapterRegistry {
       }
       try {
         const pkg = resolvePkg(slug);
-        const mod = require(pkg) as Record<string, unknown>;
+        // ESM-only 包，必须用 import() 而非 require()
+        const mod = (await import(pkg)) as Record<string, unknown>;
         const meta = getAdapter(slug);
         const factory = mod[meta?.factoryExport ?? "createAdapter"] as (
           cfg?: Record<string, unknown>
         ) => Adapter;
         map[slug] = factory({});
+      } catch (err) {
+        console.error(
+          `[AdapterRegistry] Failed to load adapter "${slug}":`,
+          err
+        );
       } finally {
         for (const [k, p] of Object.entries(prev)) {
           if (p === undefined) {

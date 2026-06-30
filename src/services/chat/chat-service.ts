@@ -63,7 +63,7 @@ export class ChatService {
   }
 
   async initialize(): Promise<void> {
-    const adapters = this.registry.buildAdapterMap();
+    const adapters = await this.registry.buildAdapterMap();
     if (Object.keys(adapters).length === 0) {
       console.log("[ChatService] No adapters enabled");
       return;
