@@ -74,6 +74,10 @@ app.whenReady().then(async () => {
     await installExtensions();
     checkForUpdates();
     await setupORPC();
+
+    const { bootstrapServices } = await import("./services/bootstrap");
+    const services = await bootstrapServices();
+    (globalThis as Record<string, unknown>).__services = services;
   } catch (error) {
     console.error("Error during app initialization:", error);
   }
