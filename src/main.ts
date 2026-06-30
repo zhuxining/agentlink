@@ -12,7 +12,7 @@ import { getBasePath } from "./utils/path";
 
 // 自动检测系统代理并传递给 Electron 网络栈
 const proxyPort = 7890; // clash 默认端口
-app.commandLine.appendSwitch("proxy-server", `http://127.0.0.1:${proxyPort}`);
+app.commandLine.appendSwitch("proxy-server", `127.0.0.1:${proxyPort}`);
 
 function createWindow() {
   const basePath = getBasePath();
