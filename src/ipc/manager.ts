@@ -13,7 +13,7 @@ class IPCManager {
   private rpcLink: RPCLink<ClientContext> | null = null;
 
   private _client: RPCClient | null = null;
-  private _ready: Promise<void>;
+  private readonly _ready: Promise<void>;
   private _resolveReady!: () => void;
 
   constructor() {
@@ -38,7 +38,8 @@ class IPCManager {
     if (!this._client) {
       this.initialize();
     }
-    return this._client!;
+    // initialize() always assigns _client, so this is safe after the call.
+    return this._client as RPCClient;
   }
 
   /** Wait for the IPC bridge to be fully set up. */
