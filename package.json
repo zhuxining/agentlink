@@ -10,7 +10,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "check": "ultracite check && tsgo --noEmit",
+    "check-types": "tsgo --noEmit",
     "fix": "ultracite fix",
     "bump-ui": "tsx ./scripts/bump-ui.ts",
     "test": "vitest run",

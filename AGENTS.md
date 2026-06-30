@@ -6,7 +6,7 @@ This file provides guidance to Code Agent when working with code in this reposit
 
 ```bash
 npm run start           # 启动 Electron 应用（开发模式）
-npm run check           # 通过 Ultracite/Biome 运行 lint 和格式化检查
+npm run check-types     # 通过 TypeScript 运行类型检查
 npm run fix             # 通过 Ultracite/Biome 自动修复 lint/格式化问题
 npm run test:unit       # 运行 Vitest 单元测试（jsdom 环境）
 npm run test:e2e        # 运行 Playwright E2E 测试（Electron + Chromium）
