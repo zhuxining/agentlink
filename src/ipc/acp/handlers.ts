@@ -1,4 +1,5 @@
 import { os } from "@orpc/server";
+import type { AcpServerStatus } from "./schemas";
 import {
   addAcpServerInputSchema,
   connectAcpServerInputSchema,
@@ -8,7 +9,13 @@ import {
 function getServices() {
   return (globalThis as Record<string, unknown>).__services as {
     acpService: {
-      getServers(): unknown[];
+      getServers(): {
+        id: string;
+        name: string;
+        command: string;
+        args: string[];
+        env?: Record<string, string>;
+      }[];
       addServer(c: unknown): void;
       removeServer(id: string): void;
       connect(id: string): Promise<void>;
@@ -21,9 +28,9 @@ function getServices() {
 export const listAcpServers = os.handler(() => {
   const acp = getServices().acpService;
   return acp.getServers().map((s) => ({
-    ...(s as object),
-    status: acp.getServerStatus((s as { id: string }).id),
-  }));
+    ...s,
+    status: acp.getServerStatus(s.id),
+  })) as AcpServerStatus[];
 });
 
 export const addAcpServer = os
