@@ -1,0 +1,218 @@
+import type { ChildProcess } from "node:child_process";
+import type {
+  ClientContext,
+  RequestPermissionResponse,
+} from "@agentclientprotocol/sdk";
+import { client } from "@agentclientprotocol/sdk";
+import { configStore } from "@/services/persistence";
+import { AcpSessionMapper } from "./acp-session-mapper";
+import { createStdioStream } from "./acp-transport";
+
+export type { AcpServerEntry as AcpServerConfig } from "@/services/persistence";
+
+interface ActiveConnection {
+  process: ChildProcess;
+  shutdown: () => void;
+}
+
+// Maps ACP sessionId back to Chat SDK threadId so the
+// session/update notification handler can route text chunks.
+const sessionToThread = new Map<string, string>();
+
+export class AcpService {
+  private readonly connections = new Map<string, ActiveConnection>();
+  private readonly contexts = new Map<string, ClientContext>();
+  private readonly sessionMapper = new AcpSessionMapper();
+  private onChunk: ((threadId: string, text: string) => void) | null = null;
+
+  /**
+   * Register a handler to receive streaming text chunks.
+   * The handler is called for every agent_message_chunk received
+   * from any connected ACP server.
+   */
+  setChunkHandler(handler: (threadId: string, text: string) => void): void {
+    this.onChunk = handler;
+  }
+
+  /** Return all configured ACP server entries from the config store. */
+  getServers(): AcpServerEntry[] {
+    return configStore.get("acpServers", []);
+  }
+
+  /** Add a new ACP server entry. Throws if the id already exists. */
+  addServer(config: AcpServerEntry): void {
+    const servers = this.getServers();
+    if (servers.find((s) => s.id === config.id)) {
+      throw new Error(`Server "${config.id}" exists`);
+    }
+    servers.push(config);
+    configStore.set("acpServers", servers);
+  }
+
+  /** Remove an ACP server entry and disconnect if connected. */
+  removeServer(id: string): void {
+    configStore.set(
+      "acpServers",
+      this.getServers().filter((s) => s.id !== id)
+    );
+    this.disconnect(id);
+  }
+
+  /** Get the connection status for an ACP server. */
+  getServerStatus(
+    _id: string
+  ): "disconnected" | "connecting" | "connected" | "error" {
+    return this.connections.has(_id) ? "connected" : "disconnected";
+  }
+
+  /**
+   * Connect to an ACP server by id.
+   *
+   * Spawns the server process, wraps stdio as an ACP Stream via
+   * ndJsonStream, and runs connectWith in long-running mode
+   * (the callback blocks on shutdownPromise until disconnect() is
+   * called).
+   */
+  async connect(id: string): Promise<void> {
+    const server = this.getServers().find((s) => s.id === id);
+    if (!server) {
+      throw new Error(`Server "${id}" not found`);
+    }
+    if (this.connections.has(id)) {
+      return;
+    }
+
+    const { stream, process } = await createStdioStream(
+      server.command,
+      server.args,
+      server.env
+    );
+
+    const app = client({ name: "AgentLink" });
+
+    // shutdownPromise blocks the connectWith callback so the
+    // connection stays alive. Calling shutdownResolve() unblocks
+    // and lets the callback return (closing the connection).
+    let shutdownResolve!: () => void;
+    const shutdownPromise = new Promise<void>((r) => {
+      shutdownResolve = r;
+    });
+
+    // Register session/update notification handler — extracts
+    // agent_message_chunk text and forwards it via onChunk.
+    app.onNotification("session/update", (ctx) => {
+      const { sessionId, update } = ctx.params;
+      const threadId = sessionToThread.get(sessionId);
+      if (!(threadId && this.onChunk)) {
+        return;
+      }
+      if (
+        update.sessionUpdate === "agent_message_chunk" &&
+        update.content.type === "text"
+      ) {
+        this.onChunk(threadId, update.content.text);
+      }
+    });
+
+    // Phase 1: auto-approve all permission requests by selecting
+    // the "allow_once" option when available, falling back to the
+    // first option.
+    app.onRequest("session/request_permission", (ctx) => {
+      const allowOnce = ctx.params.options.find((o) => o.kind === "allow_once");
+      return {
+        outcome: {
+          outcome: "selected" as const,
+          optionId:
+            allowOnce?.optionId ??
+            ctx.params.options[0]?.optionId ??
+            "allow_once",
+        },
+      } satisfies RequestPermissionResponse;
+    });
+
+    // connectWith keeps the connection open while the callback
+    // runs. The callback blocks on shutdownPromise so the
+    // connection stays alive until disconnect() is called.
+    app.connectWith(stream, async (ctx: ClientContext) => {
+      this.contexts.set(id, ctx);
+      await shutdownPromise;
+    });
+
+    process.on("exit", (code) => {
+      console.log(`[AcpService] Server "${id}" exited (${code})`);
+      this.contexts.delete(id);
+      this.connections.delete(id);
+    });
+
+    this.connections.set(id, {
+      process,
+      shutdown: shutdownResolve,
+    });
+
+    console.log(`[AcpService] Connected to "${id}"`);
+  }
+
+  /** Disconnect from an ACP server, shutting down its process. */
+  disconnect(id: string): void {
+    const conn = this.connections.get(id);
+    if (conn) {
+      conn.shutdown();
+      conn.process.kill();
+    }
+    this.connections.delete(id);
+    this.contexts.delete(id);
+  }
+
+  /**
+   * Send a user prompt to a connected ACP server.
+   *
+   * Creates a new ACP session (or reuses an existing one via the
+   * session mapper), sends the prompt, and returns the session id
+   * and stop reason. Streaming text chunks are delivered
+   * asynchronously through the onChunk handler.
+   */
+  async sendPrompt(params: {
+    serverId: string;
+    threadId: string;
+    prompt: string;
+  }): Promise<{ sessionId: string; stopReason: string }> {
+    const ctx = this.contexts.get(params.serverId);
+    if (!ctx) {
+      throw new Error(`Server "${params.serverId}" not connected`);
+    }
+
+    const cwd = process.cwd();
+    const session = await ctx.buildSession(cwd).start();
+    const sessionId = session.sessionId;
+
+    // Persist the session mapping so future turns can reuse it.
+    // Phase 1 always creates a new session per turn; reuse logic
+    // will be added in a later phase.
+    this.sessionMapper.createMapping({
+      threadId: params.threadId,
+      acpServerId: params.serverId,
+      acpSessionId: sessionId,
+      agentId: "default",
+    });
+
+    // Wire sessionId -> threadId for the onNotification handler.
+    sessionToThread.set(sessionId, params.threadId);
+
+    // Send the prompt. This blocks until the turn completes.
+    // Text chunks arrive asynchronously via session/update
+    // notifications handled by the onNotification handler above.
+    const response = await session.prompt(params.prompt);
+
+    // Clean up the routing map.
+    sessionToThread.delete(sessionId);
+
+    return { sessionId, stopReason: response.stopReason };
+  }
+
+  /** Disconnect from all active ACP server connections. */
+  disconnectAll(): void {
+    for (const [id] of this.connections) {
+      this.disconnect(id);
+    }
+  }
+}
