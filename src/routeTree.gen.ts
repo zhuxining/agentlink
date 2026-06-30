@@ -10,11 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SecondRouteImport } from './routes/second'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ConversationRouteImport } from './routes/conversation'
+import { Route as ChannelRouteImport } from './routes/channel'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConversationIdRouteImport } from './routes/conversation.$id'
 
 const SecondRoute = SecondRouteImport.update({
   id: '/second',
   path: '/second',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConversationRoute = ConversationRouteImport.update({
+  id: '/conversation',
+  path: '/conversation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChannelRoute = ChannelRouteImport.update({
+  id: '/channel',
+  path: '/channel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,42 +41,56 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConversationIdRoute = ConversationIdRouteImport.update({
+  id: '/conversation/$id',
+  path: '/conversation/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/channel': typeof ChannelRoute
+  '/conversation': typeof ConversationRoute
+  '/conversation/$id': typeof ConversationIdRoute
   '/second': typeof SecondRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/channel': typeof ChannelRoute
+  '/conversation': typeof ConversationRoute
+  '/conversation/$id': typeof ConversationIdRoute
   '/second': typeof SecondRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/channel': typeof ChannelRoute
+  '/conversation': typeof ConversationRoute
+  '/conversation/$id': typeof ConversationIdRoute
   '/second': typeof SecondRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/second'
+  fullPaths: '/' | '/channel' | '/conversation' | '/conversation/$id' | '/second' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/second'
-  id: '__root__' | '/' | '/second'
+  to: '/' | '/channel' | '/conversation' | '/conversation/$id' | '/second' | '/settings'
+  id: '__root__' | '/' | '/channel' | '/conversation' | '/conversation/$id' | '/second' | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChannelRoute: typeof ChannelRoute
+  ConversationRoute: typeof ConversationRoute
+  ConversationIdRoute: typeof ConversationIdRoute
   SecondRoute: typeof SecondRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/second': {
-      id: '/second'
-      path: '/second'
-      fullPath: '/second'
-      preLoaderRoute: typeof SecondRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -65,12 +98,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/channel': {
+      id: '/channel'
+      path: '/channel'
+      fullPath: '/channel'
+      preLoaderRoute: typeof ChannelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conversation': {
+      id: '/conversation'
+      path: '/conversation'
+      fullPath: '/conversation'
+      preLoaderRoute: typeof ConversationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conversation/$id': {
+      id: '/conversation/$id'
+      path: '/conversation/$id'
+      fullPath: '/conversation/$id'
+      preLoaderRoute: typeof ConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/second': {
+      id: '/second'
+      path: '/second'
+      fullPath: '/second'
+      preLoaderRoute: typeof SecondRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChannelRoute: ChannelRoute,
+  ConversationRoute: ConversationRoute,
+  ConversationIdRoute: ConversationIdRoute,
   SecondRoute: SecondRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
