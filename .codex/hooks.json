@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run fix --skip=correctness/noUnusedImports"
+            "command": "bun run fix --skip=correctness/noUnusedImports && bun run check-types"
           }
         ]
       }
