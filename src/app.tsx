@@ -1,15 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import React, { useEffect } from "react";
-import { Toaster } from "sonner";
 import { createRoot } from "react-dom/client";
 import { useTranslation } from "react-i18next";
+import { Toaster } from "sonner";
 import { updateAppLanguage } from "./actions/language";
 import { syncWithLocalTheme } from "./actions/theme";
 import { router } from "./utils/routes";
 import "./localization/i18n";
-import { useEventPoller } from "./hooks/use-event-poller";
 import { AdapterToaster } from "./components/channel/adapter-toaster";
+import { useEventPoller } from "./hooks/use-event-poller";
 
 const queryClient = new QueryClient();
 

@@ -169,13 +169,5 @@ export async function bootstrapServices(): Promise<AppServices> {
     )
   );
 
-  // Register event collector if available (created in Task 6)
-  try {
-    const { registerEventCollector } = await import("@/ipc/events");
-    registerEventCollector();
-  } catch {
-    console.log("[bootstrap] Event collector not available, skipping");
-  }
-
   return { chatService, acpService, eventBridge };
 }

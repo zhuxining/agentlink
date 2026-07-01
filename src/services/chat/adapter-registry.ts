@@ -23,7 +23,10 @@ export interface AdapterEntry {
 
 export class AdapterRegistry {
   /** Track per-adapter status state, persisted in memory only */
-  private statusState: Record<string, { status: AdapterEntry["status"]; errorMessage?: string }> = {};
+  private readonly statusState: Record<
+    string,
+    { status: AdapterEntry["status"]; errorMessage?: string }
+  > = {};
 
   list(): AdapterEntry[] {
     const statusState = this.statusState;
@@ -71,7 +74,11 @@ export class AdapterRegistry {
     this.statusState[slug] = { status: "disconnected" };
   }
 
-  setStatus(slug: string, status: AdapterEntry["status"], errorMessage?: string): void {
+  setStatus(
+    slug: string,
+    status: AdapterEntry["status"],
+    errorMessage?: string
+  ): void {
     this.statusState[slug] = { status, errorMessage };
   }
 
@@ -83,41 +90,52 @@ export class AdapterRegistry {
       if (!saved?.enabled) {
         continue;
       }
-      // 适配器从 process.env 读取凭据，需注入后再加载
-      const prev: Record<string, string | undefined> = {};
-      for (const [k, v] of Object.entries(saved.env)) {
-        prev[k] = process.env[k];
-        process.env[k] = v;
-      }
-      try {
-        const pkg = resolvePkg(slug);
-        // ESM-only 包，必须用 import() 而非 require()
-        const mod = (await import(pkg)) as Record<string, unknown>;
-        const meta = getAdapter(slug);
-        const factory = mod[meta?.factoryExport ?? "createAdapter"] as (
-          cfg?: Record<string, unknown>
-        ) => Adapter;
-        if (!factory) {
-          throw new Error(`Factory export "${meta?.factoryExport ?? "createAdapter"}" not found in ${pkg}`);
-        }
-        map[slug] = factory({});
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error(
-          `[AdapterRegistry] Failed to load adapter "${slug}":`,
-          err
-        );
-        this.setStatus(slug, "error", message);
-      } finally {
-        for (const [k, p] of Object.entries(prev)) {
-          if (p === undefined) {
-            delete process.env[k];
-          } else {
-            process.env[k] = p;
-          }
-        }
+      const adapter = await this.loadAdapter(slug, saved.env);
+      if (adapter) {
+        map[slug] = adapter;
       }
     }
     return map;
+  }
+
+  /**
+   * Inject env vars, dynamic-import the ESM-only adapter package,
+   * and return the constructed Adapter instance. Returns null on failure.
+   */
+  private async loadAdapter(
+    slug: string,
+    env: Record<string, string>
+  ): Promise<Adapter | null> {
+    const prev: Record<string, string | undefined> = {};
+    for (const [k, v] of Object.entries(env)) {
+      prev[k] = process.env[k];
+      process.env[k] = v;
+    }
+    try {
+      const pkg = resolvePkg(slug);
+      const mod = (await import(pkg)) as Record<string, unknown>;
+      const meta = getAdapter(slug);
+      const exportName = meta?.factoryExport ?? "createAdapter";
+      const factory = mod[exportName] as (
+        cfg?: Record<string, unknown>
+      ) => Adapter;
+      if (!factory) {
+        throw new Error(`Factory export "${exportName}" not found in ${pkg}`);
+      }
+      return factory({});
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[AdapterRegistry] Failed to load adapter "${slug}":`, err);
+      this.setStatus(slug, "error", message);
+      return null;
+    } finally {
+      for (const [k, p] of Object.entries(prev)) {
+        if (p === undefined) {
+          delete process.env[k];
+        } else {
+          process.env[k] = p;
+        }
+      }
+    }
   }
 }

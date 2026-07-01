@@ -87,6 +87,12 @@ export class ChatService {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("[ChatService] chat.initialize() failed:", err);
+      // Attempt cleanup of partially-initialized Chat instance
+      try {
+        await this.chat.shutdown();
+      } catch {
+        // ignore shutdown errors during failed init
+      }
       this.chat = null;
       // Mark all enabled adapters as error
       for (const a of this.registry.getEnabled()) {
@@ -101,11 +107,11 @@ export class ChatService {
       return;
     }
     // Mark successfully initialized adapters as connected
-    for (const a of this.registry.getEnabled()) {
-      this.registry.setStatus(a.slug, "connected");
+    for (const slug of Object.keys(adapters)) {
+      this.registry.setStatus(slug, "connected");
       this.eventBridge.emit({
         type: "adapter_status_changed",
-        adapter: a.slug,
+        adapter: slug,
         status: "connected",
       });
     }

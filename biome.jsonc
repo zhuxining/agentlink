@@ -7,7 +7,8 @@
     "includes": [
       "!src/components/ui",
       "!src/components/ai-elements",
-      "!.worktrees"
+      "!.worktrees",
+      "!.claude/worktrees"
     ]
   },
   "javascript": {

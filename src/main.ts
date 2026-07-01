@@ -78,6 +78,14 @@ app.whenReady().then(async () => {
     const { bootstrapServices } = await import("./services/bootstrap");
     const services = await bootstrapServices();
     (globalThis as Record<string, unknown>).__services = services;
+
+    // Register event collector after services are on globalThis
+    try {
+      const { registerEventCollector } = await import("@/ipc/events");
+      registerEventCollector();
+    } catch {
+      console.log("[main] Event collector not available, skipping");
+    }
   } catch (error) {
     console.error("Error during app initialization:", error);
   }
