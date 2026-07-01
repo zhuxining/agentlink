@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   disableAdapter,
   enableAdapter,
@@ -21,6 +21,7 @@ export function useEnabledAdapters() {
 }
 
 export function useEnableAdapter() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       slug,
@@ -29,11 +30,18 @@ export function useEnableAdapter() {
       slug: string;
       env: Record<string, string>;
     }) => enableAdapter(slug, env),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["channels"] });
+    },
   });
 }
 
 export function useDisableAdapter() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ slug }: { slug: string }) => disableAdapter(slug),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["channels"] });
+    },
   });
 }

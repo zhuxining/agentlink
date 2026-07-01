@@ -62,6 +62,14 @@ export class ChatService {
   }
 
   async initialize(): Promise<void> {
+    try {
+      await this.doInitialize();
+    } catch (err) {
+      console.error("[ChatService] Initialize failed:", err);
+    }
+  }
+
+  private async doInitialize(): Promise<void> {
     const adapters = await this.registry.buildAdapterMap();
     if (Object.keys(adapters).length === 0) {
       console.log("[ChatService] No adapters enabled");
@@ -72,10 +80,29 @@ export class ChatService {
       state: createStateAdapter(),
       userName: "AgentLink",
     });
-    this.registerHandlers();
-    await this.chat.initialize();
-    console.log("[ChatService] Initialized");
+    try {
+      this.registerHandlers();
+      await this.chat.initialize();
+      console.log("[ChatService] Initialized");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[ChatService] chat.initialize() failed:", err);
+      this.chat = null;
+      // Mark all enabled adapters as error
+      for (const a of this.registry.getEnabled()) {
+        this.registry.setStatus(a.slug, "error", message);
+        this.eventBridge.emit({
+          type: "adapter_status_changed",
+          adapter: a.slug,
+          status: "error",
+          error: message,
+        });
+      }
+      return;
+    }
+    // Mark successfully initialized adapters as connected
     for (const a of this.registry.getEnabled()) {
+      this.registry.setStatus(a.slug, "connected");
       this.eventBridge.emit({
         type: "adapter_status_changed",
         adapter: a.slug,

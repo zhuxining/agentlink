@@ -22,7 +22,11 @@ export interface AdapterEntry {
 }
 
 export class AdapterRegistry {
+  /** Track per-adapter status state, persisted in memory only */
+  private statusState: Record<string, { status: AdapterEntry["status"]; errorMessage?: string }> = {};
+
   list(): AdapterEntry[] {
+    const statusState = this.statusState;
     const creds = configStore.get("adapters", {});
     return SUPPORTED.map((slug) => {
       const meta = getAdapter(slug);
@@ -30,13 +34,15 @@ export class AdapterRegistry {
         return null;
       }
       const saved = creds[slug];
+      const tracked = statusState[slug] ?? { status: "disconnected" as const };
       return {
         slug,
         name: meta.name,
         description: meta.description,
         enabled: saved?.enabled ?? false,
         env: saved?.env ?? {},
-        status: "disconnected" as const,
+        errorMessage: tracked.errorMessage,
+        status: tracked.status,
       };
     }).filter(Boolean) as AdapterEntry[];
   }
@@ -53,6 +59,7 @@ export class AdapterRegistry {
     const creds = configStore.get("adapters", {});
     creds[slug] = { env, enabled: true };
     configStore.set("adapters", creds);
+    this.statusState[slug] = { status: "connecting" };
   }
 
   disable(slug: string): void {
@@ -61,6 +68,11 @@ export class AdapterRegistry {
       creds[slug].enabled = false;
       configStore.set("adapters", creds);
     }
+    this.statusState[slug] = { status: "disconnected" };
+  }
+
+  setStatus(slug: string, status: AdapterEntry["status"], errorMessage?: string): void {
+    this.statusState[slug] = { status, errorMessage };
   }
 
   async buildAdapterMap(): Promise<Record<string, Adapter>> {
@@ -85,12 +97,17 @@ export class AdapterRegistry {
         const factory = mod[meta?.factoryExport ?? "createAdapter"] as (
           cfg?: Record<string, unknown>
         ) => Adapter;
+        if (!factory) {
+          throw new Error(`Factory export "${meta?.factoryExport ?? "createAdapter"}" not found in ${pkg}`);
+        }
         map[slug] = factory({});
       } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         console.error(
           `[AdapterRegistry] Failed to load adapter "${slug}":`,
           err
         );
+        this.setStatus(slug, "error", message);
       } finally {
         for (const [k, p] of Object.entries(prev)) {
           if (p === undefined) {
