@@ -84,7 +84,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.2",
-    "@typescript/native-preview": "^7.0.0-dev.20260701.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260702.3",
     "@electron-forge/cli": "^7.11.2",
     "@electron-forge/maker-deb": "^7.11.2",
     "@electron-forge/maker-rpm": "^7.11.2",
