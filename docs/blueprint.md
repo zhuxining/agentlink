@@ -35,11 +35,28 @@ AgentLink 是一个**本地优先的 ACP-native Agent 编排层**。它复用用
 
 ## 关键假设
 
-- 用户已有或愿意搭建 ACP Server。验证：内测 ACP Server 连接成功率。
-- 飞书和 Telegram 文本消息能代表第一阶段真实 IM 价值。验证：内测用户建议回复采纳率。
-- 内置命令足以覆盖早期 Agent 和 Skill 选择。验证：命令使用频率。
-- 单工作区足以覆盖第一阶段需求。验证：工作区切换频率。
+- 用户已有或愿意搭建 ACP Server。验证：内测 ACP Server 连接成功率。**状态：✅ 已验证（pi-ACP 已正常连接）**
+- 飞书和 Telegram 文本消息能代表第一阶段真实 IM 价值。验证：内测用户建议回复采纳率。**状态：✅ 已验证（两渠道已联通，端到端消息链路打通）**
+- 内置命令足以覆盖早期 Agent 和 Skill 选择。验证：命令使用频率。**状态：⏳ 待 Phase 3 验证**
+- 单工作区足以覆盖第一阶段需求。验证：工作区切换频率。**状态：⏳ 待 Phase 3 验证**
+
+## 当前状态与路线图
+
+### 当前状态（2026-07-07）
+
+Phase 1 端到端闭环已具备：飞书、Telegram 渠道已联通，pi-ACP 已正常连接，IM 消息可经 ACP Agent 流式回复。核心 service 已落地（`chat-service`、`adapter-registry`、`acp-service`、`acp-session-mapper`、`event-bridge`）。详细设计与实施清单见 `docs/superpowers/specs/2026-06-30-chat-sdk-acp-integration-design.md`。
+
+**已知风险**：Phase 1 核心链路暂无自动化测试（`src/tests` 为空），回归风险高，列为下一步补强项（见架构总览 § 测试策略）。
+
+### 路线图
+
+- **Phase 1（已完成）**：飞书/Telegram 渠道 + ACP 集成端到端闭环。
+- **Phase 2（待启动）**：Agent/Skill 文件管理（CRUD `agents/*.md`/`skills/*.md`）、AgentResolver、Desktop UI Dashboard。
+- **Phase 3（待启动）**：内置斜杠命令（`/use`/`/skill`/`/workspace`/`/mode`/`/model`/`/default`）、工作区切换、Permission UI、高级特性。
+
+Phase 2/3 的设计细节以 design spec 为准，本文档仅记录阶段状态。
 
 ## 文档关联
 
 - 架构总览：`docs/architecture.md`
+- 集成设计规格：`docs/superpowers/specs/2026-06-30-chat-sdk-acp-integration-design.md`
