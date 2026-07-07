@@ -16,6 +16,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      # 仅提供 Node >= 22.5 运行时给 vitest worker 使用（测试依赖 node:sqlite 内置模块，
+      # ubuntu-latest 默认的 Node 20 不含该模块）。依赖安装仍走 bun install，未改回 npm ci。
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
       - name: Install dependencies
         run: bun install
       - name: Run unit tests
