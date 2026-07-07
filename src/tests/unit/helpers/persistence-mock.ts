@@ -1,7 +1,20 @@
 // src/tests/unit/helpers/persistence-mock.ts
 // 使用 node 内置 SQLite（node:sqlite），避免引入 better-sqlite3 原生二进制
 // 在 vitest worker（node ABI 127）下因编译目标（bun ABI 148）不匹配而无法加载的问题。
+// 注意：node:sqlite 需要 Node >= 22.5（见 .github/workflows/testing.yaml 的 setup-node）。
 import { DatabaseSync } from "node:sqlite";
+
+export interface PersistenceMock {
+  closeDatabase: () => void;
+  configStore: {
+    get: (
+      key: keyof MockConfigState
+    ) => MockConfigState[keyof MockConfigState] | undefined;
+    set: (key: keyof MockConfigState, value: unknown) => void;
+  };
+  createStateAdapter: () => Record<string, never>;
+  getDatabase: () => DatabaseSync;
+}
 
 export interface MockAcpServer {
   args: string[];
@@ -39,10 +52,16 @@ const SCHEMA = `
 export function createMemoryDatabase(): DatabaseSync {
   const db = new DatabaseSync(":memory:");
   db.exec(SCHEMA);
+  // 与 production（database.ts: pragma("foreign_keys = ON")）保持一致，
+  // 让 mock 的引用完整性、级联删除行为贴近真实库。
+  db.exec("PRAGMA foreign_keys = ON");
   return db;
 }
 
-export function makePersistenceMock(db: DatabaseSync, state: MockConfigState) {
+export function makePersistenceMock(
+  db: DatabaseSync,
+  state: MockConfigState
+): PersistenceMock {
   return {
     getDatabase: () => db,
     createStateAdapter: () => ({}),
