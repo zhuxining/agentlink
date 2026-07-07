@@ -4,9 +4,11 @@
 
 **Goal:** 为 Phase 1 核心链路（适配器注册、Thread↔Session 映射、ACP 服务、消息路由）补齐最小可行单元测试，把"能联通"变成"能验证"。
 
-**Architecture:** 在 `src/tests/unit/` 下按 `services/<domain>/` 镜像放置测试文件；通过 `vi.mock("@/services/persistence")` 用内存版 `configStore` + `better-sqlite3 :memory:` 替掉依赖 `electron` 的持久化模块；对 `chat`、`chat/adapters`、`@agentclientprotocol/sdk`、`./acp-transport` 做窄 mock。每个 service 独立成任务，TDD 红→绿→提交。
+**Architecture:** 在 `src/tests/unit/` 下按 `services/<domain>/` 镜像放置测试文件；通过 `vi.mock("@/services/persistence")` 用内存版 `configStore` + `node:sqlite :memory:` 替掉依赖 `electron` 的持久化模块；对 `chat`、`chat/adapters`、`@agentclientprotocol/sdk`、`./acp-transport` 做窄 mock。每个 service 独立成任务，TDD 红→绿→提交。
 
-**Tech Stack:** Vitest + jsdom + @testing-library/jest-dom（已配置于 `vitest.config.ts`），better-sqlite3（项目依赖），vi.mock（Vitest 内置）。
+> **实现偏差（与原计划不同）：** 原计划用 `better-sqlite3 :memory:`，但 vitest worker 的 Node ABI（127）与 `better-sqlite3` 预编译的 bun ABI（148）不匹配，无法加载。改为 Node 内置的 `node:sqlite`（需 Node >= 22.5，已在 `.github/workflows/testing.yaml` 用 `setup-node` 锁定，并在 `package.json` 的 `engines` 标注）。测试环境也从 `jsdom` 改为 `node`（`vitest.config.ts` 的 `environment`），仅 `toggle-theme.test.tsx` 保留 `// @vitest-environment jsdom`。
+
+**Tech Stack:** Vitest + node（默认）/ jsdom（按需）+ @testing-library/jest-dom，node:sqlite（Node 内置，>= 22.5），vi.mock（Vitest 内置）。
 
 ## Global Constraints
 
@@ -425,7 +427,7 @@ describe("AcpService connect/sendPrompt", () => {
 - [ ] **Step 2: 运行测试确认通过**
 
 Run: `bun run test:unit src/tests/unit/services/acp/acp-service.test.ts`
-Expected: 7 个用例 PASS。若 `connect` 超时，检查 `client` mock 的 `connectWith` 是否调用了回调（cb）并触发 `onReady`；若 `sendPrompt` 卡住，确认 `resolvePrompt` 在测试中被调用。
+Expected: 8 个用例 PASS。若 `connect` 超时，检查 `client` mock 的 `connectWith` 是否调用了回调（cb）并触发 `onReady`；若 `sendPrompt` 卡住，确认 `resolvePrompt` 在测试中被调用。
 
 - [ ] **Step 3: 提交**
 
@@ -584,7 +586,7 @@ git commit -m "test(service): add ChatService unit tests (init + routing)"
 - [ ] **Step 1: 运行全量单元测试**
 
 Run: `bun run test:unit`
-Expected: 所有用例 PASS（adapter-registry 7 + session-mapper 4 + acp-service 7 + chat-service 4 = 22），无 TypeScript 编译错误（`noUnusedLocals` 等）。
+Expected: 所有用例 PASS（adapter-registry 7 + session-mapper 4 + acp-service 8 + chat-service 4 = 23，另含 1 个既有 toggle-theme 测试），无 TypeScript 编译错误（`noUnusedLocals` 等）。
 
 - [ ] **Step 2: 运行项目既有检查，确保不引入回归**
 
