@@ -12,9 +12,7 @@ export default defineConfig({
   test: {
     dir: "./src/tests/unit",
     globals: true,
-    // Phase 1 核心链路测试均为纯逻辑（无 DOM），用 node 环境可让 node:sqlite
-    // 等内置模块直接 require 而无需打包；组件测试可用 `// @vitest-environment jsdom` 单独切回。
-    environment: "node",
+    environment: "jsdom",
     setupFiles: "./src/tests/unit/setup.ts",
     css: true,
     reporters: ["verbose"],

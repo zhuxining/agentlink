@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { render } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 

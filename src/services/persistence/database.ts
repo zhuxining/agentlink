@@ -1,10 +1,10 @@
 import path from "node:path";
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 import { app } from "electron";
 
-let db: Database.Database | null = null;
+let db: DatabaseSync | null = null;
 
-export function getDatabase(): Database.Database {
+export function getDatabase(): DatabaseSync {
   if (db) {
     return db;
   }
@@ -12,9 +12,9 @@ export function getDatabase(): Database.Database {
     throw new Error("Database cannot be accessed before app.whenReady()");
   }
   const dbPath = path.join(app.getPath("userData"), "agentlink.db");
-  db = new Database(dbPath);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
+  db = new DatabaseSync(dbPath);
+  db.exec("PRAGMA journal_mode = WAL");
+  db.exec("PRAGMA foreign_keys = ON");
   db.exec(`
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,
