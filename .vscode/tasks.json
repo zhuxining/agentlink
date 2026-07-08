@@ -1,0 +1,60 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install dependencies",
+      "type": "shell",
+      "command": "bun install",
+      "inAgents": true,
+      "runOptions": { "runOn": "worktreeCreated" }
+    },
+    {
+      "label": "APP Start",
+      "type": "shell",
+      "command": "bun run start",
+      "inAgents": true
+    },
+    {
+      "label": "Check types",
+      "type": "shell",
+      "command": "bun run check-types",
+      "inAgents": true
+    },
+    {
+      "label": "Fix lint/format",
+      "type": "shell",
+      "command": "bun run fix",
+      "inAgents": true
+    },
+    {
+      "label": "Run unit tests",
+      "type": "shell",
+      "command": "bun run test:unit",
+      "inAgents": true
+    },
+    {
+      "label": "Run E2E tests",
+      "type": "shell",
+      "command": "bun run test:e2e",
+      "inAgents": true
+    },
+    {
+      "label": "Run all tests",
+      "type": "shell",
+      "command": "bun run test:all",
+      "inAgents": true
+    },
+    {
+      "label": "Package app",
+      "type": "shell",
+      "command": "bun run package",
+      "inAgents": true
+    },
+    {
+      "label": "Make distributable",
+      "type": "shell",
+      "command": "bun run make",
+      "inAgents": true
+    }
+  ]
+}
