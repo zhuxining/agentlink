@@ -11,7 +11,7 @@ import type { MockConfigState } from "@/tests/unit/helpers/persistence-mock";
 
 const mocks = vi.hoisted(() => ({
   db: null as unknown as DatabaseSync,
-  state: { adapters: {}, acpServers: [] } as MockConfigState,
+  state: { acpServers: [], adapters: {} } as MockConfigState,
 }));
 
 vi.mock("@/services/persistence", async () => {
@@ -29,19 +29,19 @@ const chatMock = vi.hoisted(() => {
     (thread: unknown, message: unknown) => Promise<void>
   > = {};
   const fakeChat = {
-    onNewMention: (cb: (t: unknown, m: unknown) => Promise<void>) => {
-      handlers.onNewMention = cb;
-    },
+    initialize: vi.fn(async () => undefined),
     onDirectMessage: (cb: (t: unknown, m: unknown) => Promise<void>) => {
       handlers.onDirectMessage = cb;
+    },
+    onNewMention: (cb: (t: unknown, m: unknown) => Promise<void>) => {
+      handlers.onNewMention = cb;
     },
     onSubscribedMessage: (cb: (t: unknown, m: unknown) => Promise<void>) => {
       handlers.onSubscribedMessage = cb;
     },
-    initialize: vi.fn(async () => undefined),
     shutdown: vi.fn(async () => undefined),
   };
-  return { handlers, fakeChat };
+  return { fakeChat, handlers };
 });
 
 vi.mock("chat", () => ({
@@ -55,23 +55,23 @@ vi.mock("chat", () => ({
 
 function makeRegistry() {
   return {
-    list: vi.fn(() => []),
-    getEnabled: vi.fn(() => []),
     buildAdapterMap: vi.fn(async () => ({ telegram: {} })),
-    enable: vi.fn(),
     disable: vi.fn(),
-    setStatus: vi.fn(),
+    enable: vi.fn(),
     get: vi.fn(),
+    getEnabled: vi.fn(() => []),
+    list: vi.fn(() => []),
+    setStatus: vi.fn(),
   };
 }
 
 const THREAD = {
-  id: "t1",
   channel: { name: "telegram" },
+  id: "t1",
   post: vi.fn(async () => undefined),
   subscribe: vi.fn(async () => undefined),
 };
-const MSG = { text: "hi", author: { fullName: "Bob" }, isMention: true };
+const MSG = { author: { fullName: "Bob" }, isMention: true, text: "hi" };
 
 beforeEach(() => {
   mocks.db.exec("DELETE FROM conversations");

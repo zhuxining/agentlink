@@ -60,8 +60,6 @@ export function makePersistenceMock(
   state: MockConfigState
 ): PersistenceMock {
   return {
-    getDatabase: () => db,
-    createStateAdapter: () => ({}),
     closeDatabase: () => {
       // no-op: the in-memory database is released by GC
     },
@@ -71,5 +69,7 @@ export function makePersistenceMock(
         (state as unknown as Record<string, unknown>)[key] = value;
       },
     },
+    createStateAdapter: () => ({}),
+    getDatabase: () => db,
   };
 }
