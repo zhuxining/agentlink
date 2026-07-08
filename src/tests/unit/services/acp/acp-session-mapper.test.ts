@@ -10,7 +10,7 @@ import type { MockConfigState } from "@/tests/unit/helpers/persistence-mock";
 // uses. The factory assigns the created DB into this hoisted holder.
 const mocks = vi.hoisted(() => ({
   db: null as unknown as DatabaseSync,
-  state: { adapters: {}, acpServers: [] } as MockConfigState,
+  state: { acpServers: [], adapters: {} } as MockConfigState,
 }));
 
 vi.mock("@/services/persistence", async () => {
@@ -21,7 +21,7 @@ vi.mock("@/services/persistence", async () => {
   return makePersistenceMock(mocks.db, mocks.state);
 });
 
-const db = mocks.db;
+const { db } = mocks;
 
 function seedConversation(id: string): void {
   db.prepare(
@@ -43,10 +43,10 @@ describe("AcpSessionMapper", () => {
     seedConversation("t1");
     const m = new AcpSessionMapper();
     m.createMapping({
-      threadId: "t1",
       acpServerId: "s1",
       acpSessionId: "sess1",
       agentId: "default",
+      threadId: "t1",
     });
     m.closeSession("t1");
     expect(m.findByThreadId("t1")).toBeNull();
@@ -56,22 +56,22 @@ describe("AcpSessionMapper", () => {
     seedConversation("t1");
     const m = new AcpSessionMapper();
     const rec = m.createMapping({
-      threadId: "t1",
       acpServerId: "s1",
       acpSessionId: "sess1",
       agentId: "a1",
+      threadId: "t1",
     });
     expect(rec).toEqual({
-      threadId: "t1",
       acpServerId: "s1",
       acpSessionId: "sess1",
       agentId: "a1",
+      threadId: "t1",
     });
     expect(m.findByThreadId("t1")).toEqual({
-      threadId: "t1",
       acpServerId: "s1",
       acpSessionId: "sess1",
       agentId: "a1",
+      threadId: "t1",
     });
   });
 
@@ -79,10 +79,10 @@ describe("AcpSessionMapper", () => {
     seedConversation("t1");
     const m = new AcpSessionMapper();
     m.createMapping({
-      threadId: "t1",
       acpServerId: "s1",
       acpSessionId: "sess1",
       agentId: "a1",
+      threadId: "t1",
     });
     m.closeSession("t1");
     const row = db

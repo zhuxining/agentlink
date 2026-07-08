@@ -9,8 +9,8 @@ import {
 
 export function useAcpServers() {
   return useQuery({
-    queryKey: ["acp", "servers"],
     queryFn: listAcpServers,
+    queryKey: ["acp", "servers"],
   });
 }
 

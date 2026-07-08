@@ -6,6 +6,7 @@ import {
   Plug,
   Settings,
 } from "lucide-react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { openExternalLink } from "@/actions/shell";
 import LangToggle from "@/components/lang-toggle";
@@ -26,6 +27,29 @@ import {
 import { usePlatform } from "@/hooks/use-platform";
 import { cn } from "@/utils/tailwind";
 
+function SidebarExternalMenuItem({
+  icon: Icon,
+  title,
+  to,
+}: {
+  icon: React.ElementType;
+  title: string;
+  to: string;
+}) {
+  const handleClick = useCallback(() => {
+    openExternalLink(to);
+  }, [to]);
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton onClick={handleClick} tooltip={title}>
+        <Icon />
+        <span>{title}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
 export default function AppSidebar({
   className,
   ...props
@@ -40,15 +64,15 @@ export default function AppSidebar({
   const showTrafficLightSpace = isMacOS && isExpanded && !isMobile;
 
   const navItems = [
-    { title: t("titleHomePage"), to: "/" as const, icon: House },
-    { title: "对话", to: "/conversation" as const, icon: MessageCircle },
-    { title: "渠道", to: "/channel" as const, icon: Plug },
-    { title: "设置", to: "/settings" as const, icon: Settings },
+    { icon: House, title: t("titleHomePage"), to: "/" as const },
+    { icon: MessageCircle, title: "对话", to: "/conversation" as const },
+    { icon: Plug, title: "渠道", to: "/channel" as const },
+    { icon: Settings, title: "设置", to: "/settings" as const },
     {
+      external: true as const,
+      icon: ExternalLink,
       title: t("documentation"),
       to: "https://docs.luanroger.dev/agentlink",
-      icon: ExternalLink,
-      external: true as const,
     },
   ];
 
@@ -72,15 +96,12 @@ export default function AppSidebar({
             <SidebarMenu>
               {navItems.map((item) =>
                 "external" in item ? (
-                  <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton
-                      onClick={() => openExternalLink(item.to)}
-                      tooltip={item.title}
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <SidebarExternalMenuItem
+                    icon={item.icon}
+                    key={item.to}
+                    title={item.title}
+                    to={item.to}
+                  />
                 ) : (
                   <SidebarMenuItem key={item.to}>
                     <Link

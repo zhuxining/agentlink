@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 export const acpServerSchema = z.object({
+  args: z.array(z.string()),
+  command: z.string(),
+  env: z.record(z.string(), z.string()).optional(),
   id: z.string(),
   name: z.string(),
-  command: z.string(),
-  args: z.array(z.string()),
-  env: z.record(z.string(), z.string()).optional(),
 });
 
 export const addAcpServerInputSchema = acpServerSchema;

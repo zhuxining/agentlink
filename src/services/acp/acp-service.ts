@@ -153,11 +153,11 @@ export class AcpService {
       const allowOnce = ctx.params.options.find((o) => o.kind === "allow_once");
       return {
         outcome: {
-          outcome: "selected" as const,
           optionId:
             allowOnce?.optionId ??
             ctx.params.options[0]?.optionId ??
             "allow_once",
+          outcome: "selected" as const,
         },
       } satisfies RequestPermissionResponse;
     });
@@ -229,10 +229,10 @@ export class AcpService {
     error?: string
   ): void {
     this.onEvent?.({
-      type: "acp_server_status_changed",
+      error,
       serverId,
       status,
-      error,
+      type: "acp_server_status_changed",
     });
   }
 
@@ -256,16 +256,16 @@ export class AcpService {
 
     const cwd = process.cwd();
     const session = await ctx.buildSession(cwd).start();
-    const sessionId = session.sessionId;
+    const { sessionId } = session;
 
     // Persist the session mapping so future turns can reuse it.
     // Phase 1 always creates a new session per turn; reuse logic
     // will be added in a later phase.
     this.sessionMapper.createMapping({
-      threadId: params.threadId,
       acpServerId: params.serverId,
       acpSessionId: sessionId,
       agentId: "default",
+      threadId: params.threadId,
     });
 
     // Wire sessionId -> threadId for the onNotification handler.

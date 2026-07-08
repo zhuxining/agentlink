@@ -14,19 +14,19 @@ function createWindow() {
   const basePath = getBasePath();
   const preload = path.join(basePath, "preload.js");
   const mainWindow = new BrowserWindow({
-    width: 800,
     height: 600,
+    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
+    trafficLightPosition:
+      process.platform === "darwin" ? { x: 13, y: 13 } : undefined,
     webPreferences: {
-      devTools: inDevelopment,
       contextIsolation: true,
+      devTools: inDevelopment,
       nodeIntegration: true,
       nodeIntegrationInSubFrames: false,
 
       preload,
     },
-    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
-    trafficLightPosition:
-      process.platform === "darwin" ? { x: 13, y: 13 } : undefined,
+    width: 800,
   });
   ipcContext.setMainWindow(mainWindow);
 
@@ -51,8 +51,8 @@ async function installExtensions() {
 function checkForUpdates() {
   updateElectronApp({
     updateSource: {
-      type: UpdateSourceType.ElectronPublicUpdateService,
       repo: "LuanRoger/agentlink",
+      type: UpdateSourceType.ElectronPublicUpdateService,
     },
   });
 }

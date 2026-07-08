@@ -6,8 +6,8 @@ import {
 } from "./handlers";
 
 export const channel = {
+  disableAdapter,
+  enableAdapter,
   listAdapters,
   listEnabledAdapters,
-  enableAdapter,
-  disableAdapter,
 };

@@ -44,9 +44,9 @@ export class ChatService {
   ): Promise<void> {
     await this.registry.enable(slug, env);
     this.eventBridge.emit({
-      type: "adapter_status_changed",
       adapter: slug,
       status: "connecting",
+      type: "adapter_status_changed",
     });
     await this.rebuild();
   }
@@ -54,9 +54,9 @@ export class ChatService {
   async disableAdapter(slug: string): Promise<void> {
     await this.registry.disable(slug);
     this.eventBridge.emit({
-      type: "adapter_status_changed",
       adapter: slug,
       status: "disconnected",
+      type: "adapter_status_changed",
     });
     await this.rebuild();
   }
@@ -98,10 +98,10 @@ export class ChatService {
       for (const a of this.registry.getEnabled()) {
         this.registry.setStatus(a.slug, "error", message);
         this.eventBridge.emit({
-          type: "adapter_status_changed",
           adapter: a.slug,
-          status: "error",
           error: message,
+          status: "error",
+          type: "adapter_status_changed",
         });
       }
       return;
@@ -110,9 +110,9 @@ export class ChatService {
     for (const slug of Object.keys(adapters)) {
       this.registry.setStatus(slug, "connected");
       this.eventBridge.emit({
-        type: "adapter_status_changed",
         adapter: slug,
         status: "connected",
+        type: "adapter_status_changed",
       });
     }
   }
@@ -130,7 +130,7 @@ export class ChatService {
   }
 
   private registerHandlers(): void {
-    const chat = this.chat;
+    const { chat } = this;
     if (!chat) {
       return;
     }
@@ -150,27 +150,27 @@ export class ChatService {
     ) => {
       const adapter = thread.channel.name ?? "unknown";
       this.eventBridge.emit({
-        type: "message_received",
-        threadId: thread.id,
         adapter,
         message: {
-          text: message.text,
           authorName: message.author.fullName,
           channelName: thread.channel.name,
           isMention: message.isMention ?? false,
+          text: message.text,
         },
+        threadId: thread.id,
+        type: "message_received",
       });
       this.saveTranscript(thread.id, adapter, "user", message.text);
       if (this.handler) {
         try {
-          await this.handler({ thread, message });
+          await this.handler({ message, thread });
         } catch (err) {
           console.error("[ChatService] Handler error:", err);
           this.eventBridge.emit({
-            type: "agent_error",
-            threadId: thread.id,
             adapter,
             error: err instanceof Error ? err.message : String(err),
+            threadId: thread.id,
+            type: "agent_error",
           });
         }
       }

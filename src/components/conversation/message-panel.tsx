@@ -12,12 +12,12 @@ export function MessagePanel({ conversationId }: Props) {
   return (
     <ScrollArea className="h-full">
       <div className="space-y-3 p-4">
-        {isLoading && (
+        {isLoading ? (
           <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
             <Loader2 className="h-4 w-4 animate-spin" />
             加载中...
           </div>
-        )}
+        ) : null}
         {messages?.map((m) => (
           <div
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}

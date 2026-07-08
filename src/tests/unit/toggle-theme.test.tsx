@@ -2,10 +2,10 @@ import { render } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
 vi.mock("@/actions/theme", () => ({
-  toggleTheme: vi.fn(),
   getCurrentTheme: vi.fn(),
   setTheme: vi.fn(),
   syncWithLocalTheme: vi.fn(),
+  toggleTheme: vi.fn(),
 }));
 
 import ToggleTheme from "@/components/toggle-theme";

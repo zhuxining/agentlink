@@ -62,9 +62,9 @@ function getEncryptionKey(): string {
 }
 
 export const configStore = new Store<ConfigSchema>({
-  name: "agentlink-config",
-  defaults: { adapters: {}, acpServers: [] },
+  defaults: { acpServers: [], adapters: {} },
   encryptionKey: getEncryptionKey(),
+  name: "agentlink-config",
 });
 
 export type { AdapterCredentials, ConfigSchema };

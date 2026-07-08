@@ -44,8 +44,8 @@ function loadDevConfig(): {
   }
 
   const config: ReturnType<typeof loadDevConfig> = {
-    adapters: {},
     acpServers: [],
+    adapters: {},
   };
 
   if (vars.LARK_APP_ID && vars.LARK_APP_SECRET) {
@@ -58,10 +58,10 @@ function loadDevConfig(): {
   }
   if (vars.ACP_SERVER_PI_COMMAND && vars.ACP_SERVER_PI_ARGS) {
     config.acpServers?.push({
+      args: vars.ACP_SERVER_PI_ARGS.split(WHITESPACE_RE).filter(Boolean),
+      command: vars.ACP_SERVER_PI_COMMAND,
       id: "pi",
       name: "PI Agent",
-      command: vars.ACP_SERVER_PI_COMMAND,
-      args: vars.ACP_SERVER_PI_ARGS.split(WHITESPACE_RE).filter(Boolean),
     });
   }
 
@@ -86,10 +86,11 @@ export async function bootstrapServices(): Promise<AppServices> {
     const existingAdapters = registry.list().filter((a) => a.enabled);
     if (existingServers.length === 0 && existingAdapters.length === 0) {
       console.log("[dev] Loading dev config from .env.dev");
+      // biome-ignore lint/suspicious/noUnnecessaryConditions: adapters is a Record, lark key may be absent at runtime
       if (dev.adapters.lark) {
         await registry.enable("lark", dev.adapters.lark.env);
       }
-      for (const srv of dev.acpServers ?? []) {
+      for (const srv of dev.acpServers) {
         acpService.addServer(srv);
       }
     } else {
@@ -106,10 +107,10 @@ export async function bootstrapServices(): Promise<AppServices> {
       chunks.push(text);
     }
     eventBridge.emit({
-      type: "acp_session_update",
       sessionId: "",
-      threadId,
       text,
+      threadId,
+      type: "acp_session_update",
     });
   });
 
@@ -126,9 +127,9 @@ export async function bootstrapServices(): Promise<AppServices> {
     pendingReplies.set(thread.id, []);
     try {
       await acpService.sendPrompt({
+        prompt: message.text,
         serverId,
         threadId: thread.id,
-        prompt: message.text,
       });
 
       // 发送收集到的回复
@@ -137,10 +138,10 @@ export async function bootstrapServices(): Promise<AppServices> {
         const reply = chunks.join("");
         await thread.post(reply);
         eventBridge.emit({
-          type: "message_sent",
-          threadId: thread.id,
           adapter: thread.channel.name ?? "unknown",
           text: reply,
+          threadId: thread.id,
+          type: "message_sent",
         });
       } else {
         await thread.post("（ACP Agent 未返回响应）");
@@ -169,5 +170,5 @@ export async function bootstrapServices(): Promise<AppServices> {
     )
   );
 
-  return { chatService, acpService, eventBridge };
+  return { acpService, chatService, eventBridge };
 }

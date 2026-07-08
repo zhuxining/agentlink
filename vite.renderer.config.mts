@@ -13,9 +13,9 @@ export default defineConfig({
     react(),
   ],
   resolve: {
-    preserveSymlinks: true,
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),
     },
+    preserveSymlinks: true,
   },
 });

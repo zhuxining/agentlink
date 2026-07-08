@@ -1,6 +1,6 @@
 import { getAdapter } from "chat/adapters";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -26,6 +26,39 @@ interface Props {
   slug: string;
 }
 
+interface EnvFieldProps {
+  onChange: (key: string, value: string) => void;
+  v: { key: string; secret?: boolean; description?: string };
+  value: string;
+}
+
+function EnvField({ v, value, onChange }: EnvFieldProps) {
+  const handleChange = useCallback(
+    (e: { target: { value: string } }) => {
+      onChange(v.key, e.target.value);
+    },
+    [v.key, onChange]
+  );
+
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={`env-${v.key}`}>
+        {v.key}
+        {v.secret ? (
+          <span className="ml-1 text-destructive text-xs">(密钥)</span>
+        ) : null}
+      </Label>
+      <Input
+        id={`env-${v.key}`}
+        onChange={handleChange}
+        placeholder={v.description}
+        type={v.secret ? "password" : "text"}
+        value={value}
+      />
+    </div>
+  );
+}
+
 export function AdapterEnvDialog({ slug, name, open, onOpenChange }: Props) {
   const [envValues, setEnvValues] = useState<Record<string, string>>({});
   const [optionalOpen, setOptionalOpen] = useState(false);
@@ -34,10 +67,16 @@ export function AdapterEnvDialog({ slug, name, open, onOpenChange }: Props) {
   const required = meta?.env?.required ?? [];
   const optional = meta?.env?.optional ?? [];
 
-  const handleEnable = async () => {
-    await mutation.mutateAsync({ slug, env: envValues });
+  const handleEnable = useCallback(async () => {
+    await mutation.mutateAsync({ env: envValues, slug });
     onOpenChange(false);
-  };
+  }, [mutation, envValues, slug, onOpenChange]);
+
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleEnvChange = useCallback((key: string, value: string) => {
+    setEnvValues((p) => ({ ...p, [key]: value }));
+  }, []);
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -48,23 +87,12 @@ export function AdapterEnvDialog({ slug, name, open, onOpenChange }: Props) {
         </DialogHeader>
         <div className="space-y-3 py-4">
           {required.map((v) => (
-            <div className="space-y-1" key={v.key}>
-              <Label htmlFor={`env-${v.key}`}>
-                {v.key}
-                {v.secret && (
-                  <span className="ml-1 text-destructive text-xs">(密钥)</span>
-                )}
-              </Label>
-              <Input
-                id={`env-${v.key}`}
-                onChange={(e) =>
-                  setEnvValues((p) => ({ ...p, [v.key]: e.target.value }))
-                }
-                placeholder={v.description}
-                type={v.secret ? "password" : "text"}
-                value={envValues[v.key] ?? ""}
-              />
-            </div>
+            <EnvField
+              key={v.key}
+              onChange={handleEnvChange}
+              v={v}
+              value={envValues[v.key] ?? ""}
+            />
           ))}
 
           {optional.length > 0 && (
@@ -79,32 +107,19 @@ export function AdapterEnvDialog({ slug, name, open, onOpenChange }: Props) {
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2 space-y-3">
                 {optional.map((v) => (
-                  <div className="space-y-1" key={v.key}>
-                    <Label htmlFor={`env-${v.key}`}>
-                      {v.key}
-                      {v.secret && (
-                        <span className="ml-1 text-destructive text-xs">
-                          (密钥)
-                        </span>
-                      )}
-                    </Label>
-                    <Input
-                      id={`env-${v.key}`}
-                      onChange={(e) =>
-                        setEnvValues((p) => ({ ...p, [v.key]: e.target.value }))
-                      }
-                      placeholder={v.description}
-                      type={v.secret ? "password" : "text"}
-                      value={envValues[v.key] ?? ""}
-                    />
-                  </div>
+                  <EnvField
+                    key={v.key}
+                    onChange={handleEnvChange}
+                    v={v}
+                    value={envValues[v.key] ?? ""}
+                  />
                 ))}
               </CollapsibleContent>
             </Collapsible>
           )}
         </div>
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button onClick={handleCancel} variant="outline">
             取消
           </Button>
           <Button disabled={mutation.isPending} onClick={handleEnable}>

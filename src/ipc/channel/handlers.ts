@@ -4,10 +4,10 @@ import { disableAdapterInputSchema, enableAdapterInputSchema } from "./schemas";
 function getServices() {
   return (globalThis as Record<string, unknown>).__services as {
     chatService: {
-      getAdapters(): unknown[];
-      getEnabledAdapters(): unknown[];
-      enableAdapter(s: string, e: Record<string, string>): Promise<void>;
-      disableAdapter(s: string): Promise<void>;
+      getAdapters: () => unknown[];
+      getEnabledAdapters: () => unknown[];
+      enableAdapter: (s: string, e: Record<string, string>) => Promise<void>;
+      disableAdapter: (s: string) => Promise<void>;
     };
   };
 }

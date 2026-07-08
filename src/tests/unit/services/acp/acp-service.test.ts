@@ -8,14 +8,14 @@ import type {
 
 const mocks = vi.hoisted(() => ({
   db: null as unknown as ReturnType<typeof createMemoryDatabase>,
-  state: { adapters: {}, acpServers: [] } as MockConfigState,
+  state: { acpServers: [], adapters: {} } as MockConfigState,
 }));
 
 vi.mock("@/services/persistence", async () => {
-  const { createMemoryDatabase, makePersistenceMock } = await import(
+  const { createMemoryDatabase: createDb, makePersistenceMock } = await import(
     "@/tests/unit/helpers/persistence-mock"
   );
-  mocks.db = createMemoryDatabase();
+  mocks.db = createDb();
   return makePersistenceMock(mocks.db, mocks.state);
 });
 
@@ -34,12 +34,6 @@ const sdk = vi.hoisted(() => {
     | null = null;
   let resolvePrompt: ((v: { stopReason: string }) => void) | null = null;
   const app = {
-    onNotification: (_name: string, cb: typeof notifyHandler) => {
-      notifyHandler = cb;
-    },
-    onRequest: () => {
-      // 测试无需处理权限请求
-    },
     connectWith: async (
       _stream: unknown,
       cb: (ctx: {
@@ -55,18 +49,24 @@ const sdk = vi.hoisted(() => {
       const ctx = {
         buildSession: () => ({
           start: async () => ({
-            sessionId: "sess_1",
+            dispose: () => {
+              // 测试无需清理
+            },
             prompt: () =>
               new Promise<{ stopReason: string }>((res) => {
                 resolvePrompt = res;
               }),
-            dispose: () => {
-              // 测试无需清理
-            },
+            sessionId: "sess_1",
           }),
         }),
       };
       await cb(ctx);
+    },
+    onNotification: (_name: string, cb: typeof notifyHandler) => {
+      notifyHandler = cb;
+    },
+    onRequest: () => {
+      // 测试无需处理权限请求
     },
   };
   return {
@@ -89,20 +89,20 @@ vi.mock(
   () =>
     ({
       createStdioStream: () => ({
-        stream: {},
         process: {
-          on: () => {
-            // 测试不监听进程退出
-          },
           kill: () => {
             // 测试不实际终止进程
           },
+          on: () => {
+            // 测试不监听进程退出
+          },
         },
+        stream: {},
       }),
     }) as unknown as typeof import("@/services/acp/acp-transport")
 );
 
-const SERVER = { id: "pi", name: "Pi", command: "npx", args: ["pi-acp"] };
+const SERVER = { args: ["pi-acp"], command: "npx", id: "pi", name: "Pi" };
 
 beforeEach(() => {
   mocks.state.acpServers = [];
@@ -151,9 +151,9 @@ describe("AcpService connect/sendPrompt", () => {
   it("sendPrompt throws when server not connected", async () => {
     await expect(
       new AcpService().sendPrompt({
+        prompt: "hi",
         serverId: "pi",
         threadId: "t1",
-        prompt: "hi",
       })
     ).rejects.toThrow("not connected");
   });
@@ -170,7 +170,7 @@ describe("AcpService connect/sendPrompt", () => {
     s.setChunkHandler(onChunk);
     await s.connect("pi");
 
-    const p = s.sendPrompt({ serverId: "pi", threadId: "t1", prompt: "hi" });
+    const p = s.sendPrompt({ prompt: "hi", serverId: "pi", threadId: "t1" });
     // sendPrompt 在首个 await 之后才会建立 sessionId→threadId 的路由映射，
     // 因此先让出一次微任务，确保映射就绪再下发 session/update 通知。
     await Promise.resolve();
@@ -178,8 +178,8 @@ describe("AcpService connect/sendPrompt", () => {
       params: {
         sessionId: "sess_1",
         update: {
+          content: { text: "chunk!", type: "text" },
           sessionUpdate: "agent_message_chunk",
-          content: { type: "text", text: "chunk!" },
         },
       },
     });

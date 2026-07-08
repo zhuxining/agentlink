@@ -35,8 +35,8 @@ export function createStdioStream(
 
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
-      stdio: ["pipe", "pipe", "pipe"],
       env: childEnv,
+      stdio: ["pipe", "pipe", "pipe"],
     });
 
     // Safety timeout: if the spawn event doesn't fire within 10s,
@@ -59,6 +59,9 @@ export function createStdioStream(
       clearTimeout(timeout);
 
       const writable = new WritableStream<Uint8Array>({
+        close() {
+          child.stdin.end();
+        },
         write(chunk) {
           const ok = child.stdin.write(chunk);
           if (!ok) {
@@ -68,15 +71,15 @@ export function createStdioStream(
             // typically small and this is a best-effort relay.
           }
         },
-        close() {
-          child.stdin.end();
-        },
       });
       child.stdin.on("error", (err) => {
         console.error("[AcpTransport] stdin error:", err);
       });
 
       const readable = new ReadableStream<Uint8Array>({
+        cancel() {
+          child.stdout?.destroy();
+        },
         start(ctrl) {
           child.stdout?.on("data", (c: Buffer) =>
             ctrl.enqueue(new Uint8Array(c))
@@ -87,12 +90,9 @@ export function createStdioStream(
             process.stderr.write(c);
           });
         },
-        cancel() {
-          child.stdout?.destroy();
-        },
       });
 
-      resolve({ stream: ndJsonStream(writable, readable), process: child });
+      resolve({ process: child, stream: ndJsonStream(writable, readable) });
     });
   });
 }

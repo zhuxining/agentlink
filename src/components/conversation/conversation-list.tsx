@@ -9,12 +9,12 @@ export function ConversationList() {
   return (
     <ScrollArea className="h-full">
       <div className="space-y-2 p-2">
-        {isLoading && (
+        {isLoading ? (
           <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
             <Loader2 className="h-4 w-4 animate-spin" />
             加载中...
           </div>
-        )}
+        ) : null}
         {conversations?.map((c) => (
           <ConversationItem conversation={c} key={c.id} />
         ))}

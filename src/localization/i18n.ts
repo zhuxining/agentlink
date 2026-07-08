@@ -7,19 +7,19 @@ i18n.use(initReactI18next).init({
     en: {
       translation: {
         appName: "AgentLink",
-        titleHomePage: "Home",
-        titleSecondPage: "Second Page",
         documentation: "Documentation",
         madeBy: "Made by LuanRoger",
+        titleHomePage: "Home",
+        titleSecondPage: "Second Page",
       },
     },
     zh: {
       translation: {
         appName: "AgentLink",
-        titleHomePage: "首页",
-        titleSecondPage: "第二页",
         documentation: "文档",
         madeBy: "LuanRoger 制作",
+        titleHomePage: "首页",
+        titleSecondPage: "第二页",
       },
     },
   },

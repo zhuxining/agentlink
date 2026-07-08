@@ -18,10 +18,10 @@ export class AcpSessionMapper {
       | undefined;
     return row
       ? {
-          threadId,
           acpServerId: row.acp_server_id,
           acpSessionId: row.acp_session_id,
           agentId: row.agent_id,
+          threadId,
         }
       : null;
   }
@@ -38,10 +38,10 @@ export class AcpSessionMapper {
       )
       .run(p.acpServerId, p.acpSessionId, p.agentId, Date.now(), p.threadId);
     return {
-      threadId: p.threadId,
       acpServerId: p.acpServerId,
       acpSessionId: p.acpSessionId,
       agentId: p.agentId,
+      threadId: p.threadId,
     };
   }
 
