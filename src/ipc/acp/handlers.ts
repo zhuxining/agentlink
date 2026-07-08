@@ -10,18 +10,18 @@ import {
 function getServices() {
   return (globalThis as Record<string, unknown>).__services as {
     acpService: {
-      getServers(): {
+      getServers: () => {
         id: string;
         name: string;
         command: string;
         args: string[];
         env?: Record<string, string>;
       }[];
-      addServer(c: unknown): void;
-      removeServer(id: string): void;
-      connect(id: string): Promise<void>;
-      disconnect(id: string): void;
-      getServerStatus(id: string): string;
+      addServer: (c: unknown) => void;
+      removeServer: (id: string) => void;
+      connect: (id: string) => Promise<void>;
+      disconnect: (id: string) => void;
+      getServerStatus: (id: string) => string;
     };
   };
 }

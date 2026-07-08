@@ -1,17 +1,17 @@
 import { z } from "zod";
 
 export const adapterStatusSchema = z.object({
-  slug: z.string(),
-  name: z.string(),
   description: z.string(),
   enabled: z.boolean(),
-  status: z.enum(["disconnected", "connecting", "connected", "error"]),
   errorMessage: z.string().optional(),
+  name: z.string(),
+  slug: z.string(),
+  status: z.enum(["disconnected", "connecting", "connected", "error"]),
 });
 
 export const enableAdapterInputSchema = z.object({
-  slug: z.string(),
   env: z.record(z.string(), z.string()),
+  slug: z.string(),
 });
 export const disableAdapterInputSchema = z.object({ slug: z.string() });
 

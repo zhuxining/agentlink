@@ -5,7 +5,7 @@ const recentEvents: AppEvent[] = [];
 const MAX_EVENTS = 100;
 
 interface EventBridgeLike {
-  onEvent(handler: (event: unknown) => void): () => void;
+  onEvent: (handler: (event: unknown) => void) => () => void;
 }
 
 /**

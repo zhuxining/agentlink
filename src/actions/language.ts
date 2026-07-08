@@ -1,18 +1,18 @@
 import type { i18n } from "i18next";
 import { LOCAL_STORAGE_KEYS } from "@/constants";
 
-export function setAppLanguage(lang: string, i18n: i18n) {
+export function setAppLanguage(lang: string, i18nInst: i18n) {
   localStorage.setItem(LOCAL_STORAGE_KEYS.LANGUAGE, lang);
-  i18n.changeLanguage(lang);
+  i18nInst.changeLanguage(lang);
   document.documentElement.lang = lang;
 }
 
-export function updateAppLanguage(i18n: i18n) {
+export function updateAppLanguage(i18nInst: i18n) {
   const localLang = localStorage.getItem(LOCAL_STORAGE_KEYS.LANGUAGE);
   if (!localLang) {
     return;
   }
 
-  i18n.changeLanguage(localLang);
+  i18nInst.changeLanguage(localLang);
   document.documentElement.lang = localLang;
 }

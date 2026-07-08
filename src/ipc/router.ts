@@ -8,12 +8,12 @@ import { theme } from "./theme";
 import { window } from "./window";
 
 export const router = {
-  theme,
-  window,
-  app,
-  shell,
-  channel,
   acp,
+  app,
+  channel,
   conversation,
   events,
+  shell,
+  theme,
+  window,
 };

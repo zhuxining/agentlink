@@ -11,7 +11,7 @@ export function enableAdapter(
   slug: string,
   env: Record<string, string>
 ): Promise<{ success: boolean }> {
-  return ipc.client.channel.enableAdapter({ slug, env });
+  return ipc.client.channel.enableAdapter({ env, slug });
 }
 export function disableAdapter(slug: string): Promise<{ success: boolean }> {
   return ipc.client.channel.disableAdapter({ slug });

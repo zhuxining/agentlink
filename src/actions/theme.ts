@@ -14,8 +14,8 @@ export async function getCurrentTheme(): Promise<ThemePreferences> {
   ) as ThemeMode | null;
 
   return {
-    system: currentTheme,
     local: localTheme,
+    system: currentTheme,
   };
 }
 

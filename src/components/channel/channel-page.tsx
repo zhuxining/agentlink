@@ -24,12 +24,12 @@ export default function ChannelPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading && (
+          {isLoading ? (
             <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
               <Loader2 className="h-4 w-4 animate-spin" />
               加载中...
             </div>
-          )}
+          ) : null}
           <div className="space-y-3">
             {adapters?.map((a) => (
               <AdapterCard adapter={a} key={a.slug} />

@@ -7,9 +7,9 @@ import {
 } from "./handlers";
 
 export const acp = {
-  listAcpServers,
   addAcpServer,
-  removeAcpServer,
   connectAcpServer,
   disconnectAcpServer,
+  listAcpServers,
+  removeAcpServer,
 };

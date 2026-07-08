@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useDisableAdapter } from "@/hooks/use-channels";
@@ -13,6 +13,17 @@ interface Props {
 export function AdapterCard({ adapter }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const disableMutation = useDisableAdapter();
+
+  const handleCheckedChange = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setDialogOpen(true);
+      } else {
+        disableMutation.mutate({ slug: adapter.slug });
+      }
+    },
+    [adapter.slug, disableMutation.mutate]
+  );
 
   return (
     <Card>
@@ -31,13 +42,7 @@ export function AdapterCard({ adapter }: Props) {
         </div>
         <Switch
           checked={adapter.enabled}
-          onCheckedChange={(checked) => {
-            if (checked) {
-              setDialogOpen(true);
-            } else {
-              disableMutation.mutate({ slug: adapter.slug });
-            }
-          }}
+          onCheckedChange={handleCheckedChange}
         />
       </CardContent>
       <AdapterEnvDialog

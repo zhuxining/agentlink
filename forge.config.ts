@@ -9,51 +9,33 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import type { ForgeConfig } from "@electron-forge/shared-types";
 
 const config: ForgeConfig = {
-  packagerConfig: {
-    asar: true,
-  },
-  rebuildConfig: {},
   makers: [
     new MakerSquirrel({}),
     new MakerZIP({}, ["darwin"]),
     new MakerRpm({}),
     new MakerDeb({}),
   ],
-  publishers: [
-    {
-      /*
-       * Publish release on GitHub as draft.
-       * Remember to manually publish it on GitHub website after verifying everything is correct.
-       */
-      name: "@electron-forge/publisher-github",
-      config: {
-        repository: {
-          owner: "LuanRoger",
-          name: "agentlink",
-        },
-        draft: true,
-        prerelease: false,
-      },
-    },
-  ],
+  packagerConfig: {
+    asar: true,
+  },
   plugins: [
     new VitePlugin({
       build: [
         {
-          entry: "src/main.ts",
           config: "vite.main.config.mts",
+          entry: "src/main.ts",
           target: "main",
         },
         {
-          entry: "src/preload.ts",
           config: "vite.preload.config.mts",
+          entry: "src/preload.ts",
           target: "preload",
         },
       ],
       renderer: [
         {
-          name: "main_window",
           config: "vite.renderer.config.mts",
+          name: "main_window",
         },
       ],
     }),
@@ -70,6 +52,24 @@ const config: ForgeConfig = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  publishers: [
+    {
+      config: {
+        draft: true,
+        prerelease: false,
+        repository: {
+          name: "agentlink",
+          owner: "LuanRoger",
+        },
+      },
+      /*
+       * Publish release on GitHub as draft.
+       * Remember to manually publish it on GitHub website after verifying everything is correct.
+       */
+      name: "@electron-forge/publisher-github",
+    },
+  ],
+  rebuildConfig: {},
 };
 
 export default config;

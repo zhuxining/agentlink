@@ -17,19 +17,12 @@ export const toggleThemeMode = os.handler(() => {
 export const setThemeMode = os
   .input(setThemeModeInputSchema)
   .handler(({ input: mode }) => {
-    switch (mode) {
-      case "light":
-        nativeTheme.themeSource = "light";
-        break;
-      case "dark":
-        nativeTheme.themeSource = "dark";
-        break;
-      case "system":
-        nativeTheme.themeSource = "system";
-        break;
-      default:
-        nativeTheme.themeSource = "system";
-        break;
+    if (mode === "light") {
+      nativeTheme.themeSource = "light";
+    } else if (mode === "dark") {
+      nativeTheme.themeSource = "dark";
+    } else {
+      nativeTheme.themeSource = "system";
     }
 
     return nativeTheme.themeSource;

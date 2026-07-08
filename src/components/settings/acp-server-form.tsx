@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,15 +36,30 @@ export function AcpServerForm({ open, onOpenChange }: Props) {
   const [argsStr, setArgsStr] = useState("");
   const mutation = useAddAcpServer();
 
-  const handleAdd = async () => {
+  const handleAdd = useCallback(async () => {
     const id = `acp-${Date.now()}`;
     const args = splitArgs(argsStr);
-    await mutation.mutateAsync({ id, name, command, args });
+    await mutation.mutateAsync({ args, command, id, name });
     setName("");
     setCommand("");
     setArgsStr("");
     onOpenChange(false);
-  };
+  }, [argsStr, command, mutation, name, onOpenChange]);
+
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value),
+    []
+  );
+  const handleCommandChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setCommand(e.target.value),
+    []
+  );
+  const handleArgsChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setArgsStr(e.target.value),
+    []
+  );
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -60,7 +75,7 @@ export function AcpServerForm({ open, onOpenChange }: Props) {
             <Label htmlFor="acp-name">名称</Label>
             <Input
               id="acp-name"
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
               placeholder="如: Claude Agent"
               value={name}
             />
@@ -69,7 +84,7 @@ export function AcpServerForm({ open, onOpenChange }: Props) {
             <Label htmlFor="acp-cmd">命令</Label>
             <Input
               id="acp-cmd"
-              onChange={(e) => setCommand(e.target.value)}
+              onChange={handleCommandChange}
               placeholder="如: npx"
               value={command}
             />
@@ -78,14 +93,14 @@ export function AcpServerForm({ open, onOpenChange }: Props) {
             <Label htmlFor="acp-args">参数 (空格分隔)</Label>
             <Input
               id="acp-args"
-              onChange={(e) => setArgsStr(e.target.value)}
+              onChange={handleArgsChange}
               placeholder="如: @anthropic/claude-agent"
               value={argsStr}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button onClick={handleCancel} variant="outline">
             取消
           </Button>
           <Button

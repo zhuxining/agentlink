@@ -22,11 +22,11 @@ export function ConversationItem({ conversation }: Props) {
             {new Date(conversation.updatedAt).toLocaleString()}
           </p>
         </div>
-        {conversation.agentId && (
+        {conversation.agentId ? (
           <span className="shrink-0 text-muted-foreground text-xs">
             {conversation.agentId}
           </span>
-        )}
+        ) : null}
       </div>
     </Link>
   );

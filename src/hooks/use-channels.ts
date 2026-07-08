@@ -8,15 +8,15 @@ import {
 
 export function useAdapters() {
   return useQuery({
-    queryKey: ["channels", "adapters"],
     queryFn: listAdapters,
+    queryKey: ["channels", "adapters"],
   });
 }
 
 export function useEnabledAdapters() {
   return useQuery({
-    queryKey: ["channels", "enabled-adapters"],
     queryFn: listEnabledAdapters,
+    queryKey: ["channels", "enabled-adapters"],
   });
 }
 

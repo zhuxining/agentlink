@@ -49,11 +49,11 @@ export default function DragWindowRegion({
             size="icon-xs"
           />
         )}
-        {title && (
+        {title ? (
           <div className="select-none whitespace-nowrap pl-4 text-gray-400 text-xs">
             {title}
           </div>
-        )}
+        ) : null}
       </div>
       <WindowButtons />
     </div>

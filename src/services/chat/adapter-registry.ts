@@ -29,7 +29,7 @@ export class AdapterRegistry {
   > = {};
 
   list(): AdapterEntry[] {
-    const statusState = this.statusState;
+    const { statusState } = this;
     const creds = configStore.get("adapters", {});
     return SUPPORTED.map((slug) => {
       const meta = getAdapter(slug);
@@ -39,12 +39,12 @@ export class AdapterRegistry {
       const saved = creds[slug];
       const tracked = statusState[slug] ?? { status: "disconnected" as const };
       return {
-        slug,
-        name: meta.name,
         description: meta.description,
         enabled: saved?.enabled ?? false,
         env: saved?.env ?? {},
         errorMessage: tracked.errorMessage,
+        name: meta.name,
+        slug,
         status: tracked.status,
       };
     }).filter(Boolean) as AdapterEntry[];
@@ -60,7 +60,7 @@ export class AdapterRegistry {
 
   enable(slug: string, env: Record<string, string>): void {
     const creds = configStore.get("adapters", {});
-    creds[slug] = { env, enabled: true };
+    creds[slug] = { enabled: true, env };
     configStore.set("adapters", creds);
     this.statusState[slug] = { status: "connecting" };
   }
@@ -79,7 +79,7 @@ export class AdapterRegistry {
     status: AdapterEntry["status"],
     errorMessage?: string
   ): void {
-    this.statusState[slug] = { status, errorMessage };
+    this.statusState[slug] = { errorMessage, status };
   }
 
   async buildAdapterMap(): Promise<Record<string, Adapter>> {
@@ -90,6 +90,7 @@ export class AdapterRegistry {
       if (!saved?.enabled) {
         continue;
       }
+      // biome-ignore lint/performance/noAwaitInLoops: sequential needed — loadAdapter mutates env vars per-iteration
       const adapter = await this.loadAdapter(slug, saved.env);
       if (adapter) {
         map[slug] = adapter;
@@ -119,6 +120,7 @@ export class AdapterRegistry {
       const factory = mod[exportName] as (
         cfg?: Record<string, unknown>
       ) => Adapter;
+      // biome-ignore lint/suspicious/noUnnecessaryConditions: factory is dynamically resolved, may be absent at runtime
       if (!factory) {
         throw new Error(`Factory export "${exportName}" not found in ${pkg}`);
       }
