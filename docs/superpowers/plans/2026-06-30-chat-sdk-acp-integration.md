@@ -8,6 +8,23 @@
 
 **Tech Stack:** Electron 42.x, React 19.x, TypeScript 6.x, Chat SDK 4.31.x, @agentclientprotocol/sdk 1.x, @orpc/server 1.x, @tanstack/react-query 5.x, SQLite, electron-store
 
+## 实现状态：已完成并合并至 `main`
+
+> ⚠️ 本计划描述的工作**已在 `main` 分支实现并合并**（早于 `test/phase1-core-path` 分支的创建，相关落地提交如 `535389c`）。
+> 截至 2026-07-08 核验结果：
+> - 全部 34 个交付物（Tasks 1–13）均已在代码库中存在；`bun run check-types` 通过。
+> - 唯一"缺失"文件 `src/components/event-poller.tsx` 已由 `src/app.tsx` 中内联的 `EventPoller` 组件等价实现（第 16–17 行定义、第 32 行渲染），故无需单独创建。
+> - Task 13 的旧代码清理（`src/services/channel.ts`、`src/components/channel-page.tsx`、`src/routes/second.tsx`）已完成，相关文件已不存在。
+> - **本计划现作为历史设计文档保留，其步骤不再需要执行。** 盲目按原计划逐步执行会回退已合并的代码（尤其 Task 1 的 `database.ts` 会重新引入 `better-sqlite3`，破坏当前 `node:sqlite` 实现）。
+
+### 实现偏差（与计划不一致处）
+
+- **持久化层（Task 1）**：计划指定使用 `better-sqlite3`，但实际生产代码已改为 Node 内置 `node:sqlite`。`src/services/persistence/database.ts` 现为 `import { DatabaseSync } from "node:sqlite"`，并以 `db.exec("PRAGMA ...")` 替代 `db.pragma(...)`。相关改造见提交 `277ae75`；CI 在 `testing.yaml` 通过 `setup-node` 锁定 Node ≥24，`package.json` 标注 `engines.node >= 24`。测试侧的 `src/tests/unit/helpers/persistence-mock.ts` 同样改用 `node:sqlite`。
+- **工作树**：计划步骤中的 `cd .worktrees/feat+chat-sdk-integration` 是针对 git worktree 的指令；实际工作在 `main` 直接完成，未使用 worktree。
+- **event-poller**：计划要求新建 `src/components/event-poller.tsx`，实际在 `src/app.tsx` 内联实现并直接渲染 `<EventPoller />`，功能等价。
+
+---
+
 ## Global Constraints
 
 - 所有凭据使用 electron-store（safeStorage 加密）
