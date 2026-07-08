@@ -97,7 +97,7 @@
         "tsx": "^4.22.5",
         "tw-animate-css": "^1.4.0",
         "typescript": "^6.0.3",
-        "ultracite": "^7.8.3",
+        "ultracite": "^7.8.4",
         "vite": "^8.1.2",
         "vitest": "^4.1.9",
       },
@@ -2506,7 +2506,7 @@
 
     "uint8array-extras": ["uint8array-extras@1.5.0", "https://registry.npmmirror.com/uint8array-extras/-/uint8array-extras-1.5.0.tgz", {}, "sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A=="],
 
-    "ultracite": ["ultracite@7.8.3", "https://registry.npmmirror.com/ultracite/-/ultracite-7.8.3.tgz", { "dependencies": { "@clack/prompts": "^1.5.1", "commander": "^15.0.0", "cross-spawn": "^7.0.6", "deepmerge": "^4.3.1", "glob": "^13.0.6", "jsonc-parser": "^3.3.1", "nypm": "^0.6.6", "yaml": "^2.9.0", "zod": "^4.4.3" }, "peerDependencies": { "oxfmt": ">=0.1.0", "oxlint": "^1.0.0" }, "optionalPeers": ["oxfmt", "oxlint"], "bin": { "ultracite": "dist/index.js" } }, "sha512-Fsj9aYJfh57uDB6DrdKVafKhF0QNekwqTrZKoTMYePjZp1npyFCnfZVj2SnPZdOcxAGHJfmLYUIDq0YPh8acVA=="],
+    "ultracite": ["ultracite@7.8.4", "", { "dependencies": { "@clack/prompts": "^1.5.1", "commander": "^15.0.0", "cross-spawn": "^7.0.6", "deepmerge": "^4.3.1", "glob": "^13.0.6", "jsonc-parser": "^3.3.1", "nypm": "^0.6.6", "yaml": "^2.9.0", "zod": "^4.4.3" }, "peerDependencies": { "oxfmt": ">=0.1.0", "oxlint": "^1.0.0" }, "optionalPeers": ["oxfmt", "oxlint"], "bin": { "ultracite": "dist/index.js" } }, "sha512-Lqd1k8sr7xT3QY+2x6qA72TFkA3r1Z7QvCUbOFBOeGAVdwBG43RPSvhTuEpZOgbdINFBcJ/v6dK2tyT4inPDTQ=="],
 
     "undici": ["undici@7.28.0", "https://registry.npmmirror.com/undici/-/undici-7.28.0.tgz", {}, "sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA=="],
 
