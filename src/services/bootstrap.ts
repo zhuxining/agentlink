@@ -148,6 +148,7 @@ export async function bootstrapServices(): Promise<AppServices> {
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      console.error("[bootstrap] ACP handler error:", err instanceof Error ? err.stack : err);
       await thread.post(`Error: ${msg}`);
     }
   });
