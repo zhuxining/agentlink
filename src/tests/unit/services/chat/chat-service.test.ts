@@ -140,6 +140,29 @@ describe("ChatService message routing", () => {
     });
     expect(handler).not.toHaveBeenCalled();
   });
+
+  it("saveAgentReply persists an agent transcript", async () => {
+    const registry = makeRegistry();
+    const bridge = new EventBridge();
+    const svc = new ChatService(registry as never, bridge);
+    svc.onMessage(async ({ saveAgentReply }) => {
+      saveAgentReply("agent reply");
+      await Promise.resolve();
+    });
+    await svc.initialize();
+
+    await chatMock.handlers.onNewMention(THREAD, MSG);
+
+    const rows = mocks.db
+      .prepare(
+        "SELECT role, content FROM transcripts WHERE conversation_id = ? ORDER BY created_at"
+      )
+      .all("t1") as Array<{ role: string; content: string }>;
+    expect(rows.map((r) => ({ content: r.content, role: r.role }))).toEqual([
+      { content: "hi", role: "user" },
+      { content: "agent reply", role: "agent" },
+    ]);
+  });
 });
 
 describe("ChatService enable/disable", () => {

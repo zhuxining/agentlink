@@ -186,8 +186,54 @@ describe("AcpService connect/sendPrompt", () => {
     sdk.resolvePrompt({ stopReason: "end_turn" });
     const res = await p;
 
-    expect(res).toEqual({ sessionId: "sess_1", stopReason: "end_turn" });
+    expect(res).toMatchObject({ sessionId: "sess_1", stopReason: "end_turn" });
     expect(onChunk).toHaveBeenCalledWith("t1", "chunk!");
+    s.disconnect("pi");
+  });
+
+  it("sendPrompt returns a textStream that yields chunks then completes", async () => {
+    mocks.db
+      .prepare(
+        "INSERT INTO conversations (id, adapter, title, created_at, updated_at) VALUES (?,?,?,?,?)"
+      )
+      .run("t2", "telegram", "", Date.now(), Date.now());
+    const s = new AcpService();
+    s.addServer(SERVER);
+    await s.connect("pi");
+
+    const p = s.sendPrompt({
+      prompt: "hi",
+      serverId: "pi",
+      threadId: "t2",
+    });
+    await Promise.resolve();
+    sdk.getNotify()?.({
+      params: {
+        sessionId: "sess_1",
+        update: {
+          content: { text: "Hello", type: "text" },
+          sessionUpdate: "agent_message_chunk",
+        },
+      },
+    });
+    sdk.getNotify()?.({
+      params: {
+        sessionId: "sess_1",
+        update: {
+          content: { text: " World", type: "text" },
+          sessionUpdate: "agent_message_chunk",
+        },
+      },
+    });
+    sdk.resolvePrompt({ stopReason: "end_turn" });
+    const res = await p;
+
+    const collected: string[] = [];
+    for await (const chunk of res.textStream) {
+      collected.push(chunk);
+    }
+    expect(collected).toEqual(["Hello", " World"]);
+    expect(res.stopReason).toBe("end_turn");
     s.disconnect("pi");
   });
 });

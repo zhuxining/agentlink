@@ -6,6 +6,7 @@ import type {
 import { client } from "@agentclientprotocol/sdk";
 import type { AppEvent } from "@/services/chat/event-bridge";
 import { type AcpServerEntry, configStore } from "@/services/persistence";
+import { AsyncQueue } from "@/utils/async-queue";
 import { AcpSessionMapper } from "./acp-session-mapper";
 import { createStdioStream } from "./acp-transport";
 
@@ -248,7 +249,11 @@ export class AcpService {
     serverId: string;
     threadId: string;
     prompt: string;
-  }): Promise<{ sessionId: string; stopReason: string }> {
+  }): Promise<{
+    sessionId: string;
+    stopReason: string;
+    textStream: AsyncIterable<string>;
+  }> {
     const ctx = this.contexts.get(params.serverId);
     if (!ctx) {
       throw new Error(`Server "${params.serverId}" not connected`);
@@ -271,15 +276,31 @@ export class AcpService {
     // Wire sessionId -> threadId for the onNotification handler.
     sessionToThread.set(sessionId, params.threadId);
 
-    try {
-      // Send the prompt. This blocks until the turn completes.
-      // Text chunks arrive asynchronously via session/update
-      // notifications handled by the onNotification handler above.
-      const response = await session.prompt(params.prompt);
+    // Per-call queue: captures agent_message_chunk text for this turn.
+    // The global onChunk handler (set via setChunkHandler) still fires
+    // for downstream consumers (event bridge -> UI subscription).
+    const queue = new AsyncQueue<string>();
+    const previousChunk = this.onChunk;
+    this.onChunk = (threadId: string, text: string) => {
+      previousChunk?.(threadId, text);
+      if (threadId === params.threadId) {
+        queue.push(text);
+      }
+    };
 
-      return { sessionId, stopReason: response.stopReason };
+    try {
+      const response = await session.prompt(params.prompt);
+      queue.close();
+      return {
+        sessionId,
+        stopReason: response.stopReason,
+        textStream: queue.iter(),
+      };
+    } catch (err) {
+      queue.close();
+      throw err;
     } finally {
-      // Clean up the routing map and session subscription.
+      this.onChunk = previousChunk;
       sessionToThread.delete(sessionId);
       session.dispose();
     }

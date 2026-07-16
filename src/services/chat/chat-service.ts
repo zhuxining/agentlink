@@ -11,6 +11,8 @@ export type ChatMessageHandler = (ctx: {
     subscribe: () => Promise<void>;
   };
   message: { text: string; author: { fullName: string }; isMention?: boolean };
+  /** Persist an agent reply as a transcript. */
+  saveAgentReply: (text: string) => void;
 }) => Promise<void>;
 
 export class ChatService {
@@ -163,7 +165,12 @@ export class ChatService {
       this.saveTranscript(thread.id, adapter, "user", message.text);
       if (this.handler) {
         try {
-          await this.handler({ message, thread });
+          await this.handler({
+            message,
+            saveAgentReply: (text: string) =>
+              this.saveTranscript(thread.id, adapter, "agent", text),
+            thread,
+          });
         } catch (err) {
           console.error("[ChatService] Handler error:", err);
           this.eventBridge.emit({

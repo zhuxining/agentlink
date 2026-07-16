@@ -1,6 +1,11 @@
-import { Loader2 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+// src/components/conversation/message-panel.tsx
 import { useMessages } from "@/hooks/use-conversations";
+import { useStreamingMessage } from "@/hooks/use-streaming-message";
+import { mergeMessages } from "@/utils/message-merge";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
+import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
+import { Loader2 } from "lucide-react";
 
 interface Props {
   conversationId: string;
@@ -8,41 +13,56 @@ interface Props {
 
 export function MessagePanel({ conversationId }: Props) {
   const { data: messages, isLoading } = useMessages(conversationId);
+  const streaming = useStreamingMessage(conversationId);
+
+  const merged = mergeMessages(
+    messages ?? [],
+    streaming.isStreaming
+      ? { isThinking: streaming.isThinking, text: streaming.text }
+      : null
+  );
 
   return (
-    <ScrollArea className="h-full">
-      <div className="space-y-3 p-4">
+    <Conversation>
+      <ConversationContent>
         {isLoading ? (
           <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
             <Loader2 className="h-4 w-4 animate-spin" />
             加载中...
           </div>
         ) : null}
-        {messages?.map((m) => (
-          <div
-            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-            key={m.id}
+        {merged.map((m) => (
+          <Message
+            from={m.role === "user" ? "user" : "assistant"}
+            key={`${m.id}-${m.createdAt}`}
           >
-            <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                m.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
-              }`}
-            >
-              <p className="whitespace-pre-wrap text-sm">{m.content}</p>
-              <span className="mt-1 block text-right text-xs opacity-70">
-                {new Date(m.createdAt).toLocaleTimeString()}
-              </span>
-            </div>
-          </div>
+            <MessageContent>
+              {m.isThinking ? (
+                <div className="text-muted-foreground text-sm">
+                  <Shimmer>正在思考...</Shimmer>
+                </div>
+              ) : (
+                <MessageResponse>{m.content}</MessageResponse>
+              )}
+            </MessageContent>
+          </Message>
         ))}
-        {messages?.length === 0 && !isLoading && (
-          <p className="py-8 text-center text-muted-foreground text-sm">
+        {streaming.error ? (
+          <Message from="assistant">
+            <MessageContent>
+              <div className="text-destructive text-sm">
+                {streaming.error}
+              </div>
+            </MessageContent>
+          </Message>
+        ) : null}
+        {merged.length === 0 && !isLoading && !streaming.isStreaming ? (
+          <div className="flex size-full items-center justify-center text-muted-foreground text-sm">
             暂无消息
-          </p>
-        )}
-      </div>
-    </ScrollArea>
+          </div>
+        ) : null}
+      </ConversationContent>
+      <ConversationScrollButton />
+    </Conversation>
   );
 }

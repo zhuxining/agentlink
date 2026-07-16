@@ -98,14 +98,9 @@ export async function bootstrapServices(): Promise<AppServices> {
     }
   }
 
-  // Collect ACP chunks per thread, then post when turn completes
-  const pendingReplies = new Map<string, string[]>();
-
+  // Emit acp_session_update events per chunk so the desktop UI can
+  // render the streaming response in real time (via oRPC subscription).
   acpService.setChunkHandler((threadId: string, text: string) => {
-    const chunks = pendingReplies.get(threadId);
-    if (chunks) {
-      chunks.push(text);
-    }
     eventBridge.emit({
       sessionId: "",
       text,
@@ -114,8 +109,8 @@ export async function bootstrapServices(): Promise<AppServices> {
     });
   });
 
-  // Wire ChatService messages → ACP Server
-  chatService.onMessage(async ({ thread, message }) => {
+  // Wire ChatService messages -> ACP Server
+  chatService.onMessage(async ({ thread, message, saveAgentReply }) => {
     // Phase 1: use the first configured ACP Server
     const servers = acpService.getServers();
     if (servers.length === 0) {
@@ -124,34 +119,35 @@ export async function bootstrapServices(): Promise<AppServices> {
     }
 
     const serverId = servers[0].id;
-    pendingReplies.set(thread.id, []);
     try {
-      await acpService.sendPrompt({
+      const { textStream } = await acpService.sendPrompt({
         prompt: message.text,
         serverId,
         threadId: thread.id,
       });
 
-      // 发送收集到的回复
-      const chunks = pendingReplies.get(thread.id);
-      if (chunks && chunks.length > 0) {
-        const reply = chunks.join("");
-        await thread.post(reply);
-        eventBridge.emit({
-          adapter: thread.channel.name ?? "unknown",
-          text: reply,
-          threadId: thread.id,
-          type: "message_sent",
-        });
-      } else {
-        await thread.post("（ACP Agent 未返回响应）");
-      }
+      // Tee the stream: accumulate full text while streaming to IM.
+      // thread.post consumes the iterable via Chat SDK's native streaming
+      // (adapter stream()/editMessage() with throttling).
+      let fullText = "";
+      const teedStream = (async function* () {
+        for await (const chunk of textStream) {
+          fullText += chunk;
+          yield chunk;
+        }
+      })();
+
+      await thread.post(teedStream);
+      saveAgentReply(fullText);
+      eventBridge.emit({
+        adapter: thread.channel.name ?? "unknown",
+        text: fullText,
+        threadId: thread.id,
+        type: "message_sent",
+      });
     } catch (err) {
-      await thread.post(
-        `Error: ${err instanceof Error ? err.message : String(err)}`
-      );
-    } finally {
-      pendingReplies.delete(thread.id);
+      const msg = err instanceof Error ? err.message : String(err);
+      await thread.post(`Error: ${msg}`);
     }
   });
 
