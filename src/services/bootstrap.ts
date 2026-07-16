@@ -127,17 +127,18 @@ export async function bootstrapServices(): Promise<AppServices> {
       });
 
       // Tee the stream: accumulate full text while streaming to IM.
-      // thread.post consumes the iterable via Chat SDK's native streaming
-      // (adapter stream()/editMessage() with throttling).
+      // First collect all chunks, then post as a single message.
+      // Desktop UI receives streaming via acp_session_update events.
       let fullText = "";
-      const teedStream = (async function* () {
-        for await (const chunk of textStream) {
-          fullText += chunk;
-          yield chunk;
-        }
-      })();
+      for await (const chunk of textStream) {
+        fullText += chunk;
+      }
 
-      await thread.post(teedStream);
+      if (fullText) {
+        await thread.post(fullText);
+      } else {
+        await thread.post("（ACP Agent 未返回响应）");
+      }
       saveAgentReply(fullText);
       eventBridge.emit({
         adapter: thread.channel.name ?? "unknown",
