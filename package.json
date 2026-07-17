@@ -67,7 +67,7 @@
     "react": "^19.2.7",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.7",
-    "react-i18next": "^17.0.9",
+    "react-i18next": "^17.0.10",
     "react-jsx-parser": "^2.4.1",
     "react-resizable-panels": "^4.12.2",
     "recharts": "^3.9.2",
