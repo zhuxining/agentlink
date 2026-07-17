@@ -2,8 +2,8 @@
 import type { Transcript } from "@/ipc/conversation/schemas";
 
 export interface StreamingMessage {
-  text: string;
   isThinking: boolean;
+  text: string;
 }
 
 export type MergedMessage = Transcript & { isThinking?: boolean };

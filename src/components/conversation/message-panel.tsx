@@ -1,11 +1,20 @@
 // src/components/conversation/message-panel.tsx
+
+import { Loader2 } from "lucide-react";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+} from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { useMessages } from "@/hooks/use-conversations";
 import { useStreamingMessage } from "@/hooks/use-streaming-message";
 import { mergeMessages } from "@/utils/message-merge";
-import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
-import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import { Shimmer } from "@/components/ai-elements/shimmer";
-import { Loader2 } from "lucide-react";
 
 interface Props {
   conversationId: string;
@@ -50,9 +59,7 @@ export function MessagePanel({ conversationId }: Props) {
         {streaming.error ? (
           <Message from="assistant">
             <MessageContent>
-              <div className="text-destructive text-sm">
-                {streaming.error}
-              </div>
+              <div className="text-destructive text-sm">{streaming.error}</div>
             </MessageContent>
           </Message>
         ) : null}

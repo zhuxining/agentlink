@@ -18,7 +18,8 @@ export function useEventStream(onEvent: (event: AppEvent) => void): void {
 
     void (async () => {
       try {
-        iterator = (await ipc.client.events.subscribe()) as AsyncGenerator<AppEvent>;
+        iterator =
+          (await ipc.client.events.subscribe()) as AsyncGenerator<AppEvent>;
         for await (const event of iterator) {
           if (cancelled) {
             break;

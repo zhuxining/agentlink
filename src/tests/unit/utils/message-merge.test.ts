@@ -1,7 +1,7 @@
 // src/tests/unit/utils/message-merge.test.ts
 import { describe, expect, it } from "vitest";
-import { mergeMessages } from "@/utils/message-merge";
 import type { Transcript } from "@/ipc/conversation/schemas";
+import { mergeMessages } from "@/utils/message-merge";
 
 const mk = (role: "user" | "agent", content: string): Transcript => ({
   content,

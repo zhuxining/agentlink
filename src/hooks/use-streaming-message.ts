@@ -1,13 +1,13 @@
 // src/hooks/use-streaming-message.ts
 import { useEffect, useState } from "react";
-import type { AppEvent } from "@/ipc/events/event-types";
 import { useEventStream } from "@/hooks/use-event-stream";
+import type { AppEvent } from "@/ipc/events/event-types";
 
 export interface StreamingMessageState {
+  error: string | null;
+  isStreaming: boolean;
   isThinking: boolean;
   text: string;
-  isStreaming: boolean;
-  error: string | null;
 }
 
 const IDLE: StreamingMessageState = {
