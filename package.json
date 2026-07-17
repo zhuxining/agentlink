@@ -107,7 +107,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.10",
-    "electron": "^43.1.0",
+    "electron": "^43.1.1",
     "electron-devtools-installer": "^4.0.0",
     "electron-playwright-helpers": "^2.1.0",
     "git-cliff": "^2.13.1",
