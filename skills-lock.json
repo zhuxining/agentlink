@@ -19,11 +19,23 @@
       "skillPath": "skills/hunt/SKILL.md",
       "computedHash": "dac455df1df5baa977517c8c1aa583f8e3ebb5008631ea2d1be5ec3201a0670d"
     },
+    "migrate-radix-to-base": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/migrate-radix-to-base/SKILL.md",
+      "computedHash": "e1f2030ee5059be3dff0812ca0e4b995ee9fa3132176f049ebe6c90346a6755e"
+    },
     "react-best-practices": {
       "source": "zhuxining/skills",
       "sourceType": "github",
       "skillPath": "react-best-practices/SKILL.md",
       "computedHash": "18c8a8e8fe8868927601bceab6d68a7293d464ee2bfc8699c3cdf634fa332338"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "d81caa0f86aabab65b25e302d454f23a3328760386ed9078345584c0d5c8058e"
     },
     "tanstack-router": {
       "source": "tanstack-skills/tanstack-skills",

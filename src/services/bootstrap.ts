@@ -126,19 +126,18 @@ export async function bootstrapServices(): Promise<AppServices> {
         threadId: thread.id,
       });
 
-      // Tee the stream: accumulate full text while streaming to IM.
-      // First collect all chunks, then post as a single message.
-      // Desktop UI receives streaming via acp_session_update events.
+      // Consume the ACP stream into a single string, then post to IM.
+      // Desktop UI gets real-time streaming via acp_session_update events
+      // (wired in the chunk handler above); IM gets the full text once.
+      // thread.post(AsyncIterable) would call adapter.stream() → vfile's
+      // minproc interop is broken under Rolldown's CJS bundling, so we
+      // bypass it and post the assembled string.
       let fullText = "";
       for await (const chunk of textStream) {
         fullText += chunk;
       }
 
-      if (fullText) {
-        await thread.post(fullText);
-      } else {
-        await thread.post("（ACP Agent 未返回响应）");
-      }
+      await thread.post(fullText || "（ACP Agent 未返回响应）");
       saveAgentReply(fullText);
       eventBridge.emit({
         adapter: thread.channel.name ?? "unknown",
@@ -148,7 +147,10 @@ export async function bootstrapServices(): Promise<AppServices> {
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error("[bootstrap] ACP handler error:", err instanceof Error ? err.stack : err);
+      console.error(
+        "[bootstrap] ACP handler error:",
+        err instanceof Error ? err.stack : err
+      );
       await thread.post(`Error: ${msg}`);
     }
   });

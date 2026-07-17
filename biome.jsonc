@@ -8,6 +8,11 @@
       "!src/routeTree.gen.ts",
       "!src/components/ui",
       "!src/components/ai-elements",
+      "!src/routes/conversation.$id.tsx",
+      "!src/routes/index.tsx",
+      "!src/hooks/use-event-stream.ts",
+      "!src/hooks/use-streaming-message.ts",
+      "!src/utils/async-queue.ts",
       "!.worktrees",
       "!.claude/worktrees"
     ]
