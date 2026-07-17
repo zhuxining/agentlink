@@ -40,13 +40,23 @@ beforeEach(() => {
 });
 
 describe("AdapterRegistry", () => {
-  it("list returns supported adapters disabled by default", () => {
+  it("list returns supported adapters with web always enabled", () => {
     const entries = registry().list();
+    const slugs = entries.map((e) => e.slug).sort((a, b) => a.localeCompare(b));
+    expect(slugs).toEqual(["lark", "telegram", "web"]);
+    const imEntries = slugs.filter((s) => s !== "web");
     expect(
-      entries.map((e) => e.slug).sort((a, b) => a.localeCompare(b))
-    ).toEqual(["lark", "telegram"]);
-    expect(entries.every((e) => e.enabled === false)).toBe(true);
-    expect(entries.every((e) => e.status === "disconnected")).toBe(true);
+      imEntries.every(
+        (s) => entries.find((e) => e.slug === s)?.enabled === false
+      )
+    ).toBe(true);
+    expect(
+      imEntries.every(
+        (s) => entries.find((e) => e.slug === s)?.status === "disconnected"
+      )
+    ).toBe(true);
+    expect(entries.find((e) => e.slug === "web")?.enabled).toBe(true);
+    expect(entries.find((e) => e.slug === "web")?.status).toBe("connected");
   });
 
   it("get returns a single entry by slug", () => {
@@ -75,10 +85,12 @@ describe("AdapterRegistry", () => {
     expect(r.get("telegram")?.status).toBe("disconnected");
   });
 
-  it("getEnabled filters to enabled adapters only", () => {
+  it("getEnabled returns enabled adapters including web", () => {
     const r = registry();
     r.enable("telegram", {});
-    expect(r.getEnabled().map((e) => e.slug)).toEqual(["telegram"]);
+    const slugs = r.getEnabled().map((e) => e.slug);
+    expect(slugs).toContain("telegram");
+    expect(slugs).toContain("web");
   });
 
   it("setStatus updates tracked status and errorMessage", () => {
@@ -88,8 +100,31 @@ describe("AdapterRegistry", () => {
     expect(r.get("telegram")?.errorMessage).toBe("boom");
   });
 
-  it("buildAdapterMap returns empty when no adapter enabled", async () => {
+  it("buildAdapterMap returns only web when no adapter enabled", async () => {
     const map = await registry().buildAdapterMap();
-    expect(map).toEqual({});
+    expect(Object.keys(map)).toEqual(["web"]);
+    expect(map.web?.name).toBe("web");
+  });
+});
+
+describe("AdapterRegistry web support", () => {
+  it("SUPPORTED includes 'web'", () => {
+    const reg = new AdapterRegistry();
+    const list = reg.list();
+    expect(list.some((a) => a.slug === "web")).toBe(true);
+  });
+
+  it("buildAdapterMap always includes 'web' without enabling", async () => {
+    const reg = new AdapterRegistry();
+    const map = await reg.buildAdapterMap();
+    expect(map.web).toBeDefined();
+    expect(map.web?.name).toBe("web");
+  });
+
+  it("web adapter does not require env vars and is always enabled", () => {
+    const reg = new AdapterRegistry();
+    const entry = reg.get("web");
+    expect(entry?.enabled).toBe(true);
+    expect(entry?.status).toBe("connected");
   });
 });
