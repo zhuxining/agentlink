@@ -15,11 +15,13 @@ export const getConversation = os
   .input(getConversationInputSchema)
   .handler(({ input }) => {
     const db = getDatabase();
-    return db
-      .prepare(
-        "SELECT id, adapter, agent_id as agentId, title, created_at as createdAt, updated_at as updatedAt FROM conversations WHERE id = ?"
-      )
-      .get(input.id);
+    return (
+      db
+        .prepare(
+          "SELECT id, adapter, agent_id as agentId, title, created_at as createdAt, updated_at as updatedAt FROM conversations WHERE id = ?"
+        )
+        .get(input.id) ?? null
+    );
   });
 
 export const getMessages = os
