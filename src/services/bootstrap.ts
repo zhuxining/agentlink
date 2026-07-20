@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { createWebHttpServer } from "@/services/web";
 import { AcpService } from "./acp";
 import { AdapterRegistry, ChatService, EventBridge } from "./chat";
 
@@ -157,6 +158,25 @@ export async function bootstrapServices(): Promise<AppServices> {
 
   // Initialize ChatService (starts enabled adapters)
   await chatService.initialize();
+
+  // 启动 web HTTP server，供桌面端 useChat 调用
+  const chat = chatService.getChat();
+  if (chat) {
+    try {
+      const webServer = await createWebHttpServer(chat);
+      (globalThis as unknown as { __webServer?: unknown }).__webServer =
+        webServer;
+      console.log(
+        `[bootstrap] Web HTTP server listening on 127.0.0.1:${webServer.port}`
+      );
+    } catch (err) {
+      console.error(
+        "[bootstrap] Web HTTP server failed:",
+        err instanceof Error ? err.stack : err
+      );
+      // 不阻断主流程，chat 仍可用，只是桌面端发消息会失败
+    }
+  }
 
   // Auto-connect configured ACP Servers (parallel for faster startup)
   await Promise.all(

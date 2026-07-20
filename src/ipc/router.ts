@@ -5,6 +5,7 @@ import { conversation } from "./conversation";
 import { events } from "./events";
 import { shell } from "./shell";
 import { theme } from "./theme";
+import { web } from "./web";
 import { window } from "./window";
 
 export const router = {
@@ -15,5 +16,6 @@ export const router = {
   events,
   shell,
   theme,
+  web,
   window,
 };

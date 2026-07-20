@@ -1,75 +1,60 @@
-// src/components/conversation/message-panel.tsx
-
 import { Loader2 } from "lucide-react";
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from "@/components/ai-elements/conversation";
-import {
-  Message,
-  MessageContent,
-  MessageResponse,
-} from "@/components/ai-elements/message";
-import { Shimmer } from "@/components/ai-elements/shimmer";
-import { useMessages } from "@/hooks/use-conversations";
-import { useStreamingMessage } from "@/hooks/use-streaming-message";
-import { mergeMessages } from "@/utils/message-merge";
+import { useMemo } from "react";
+import { useConversation, useMessages } from "@/hooks/use-conversations";
+import { toUIMessages } from "@/utils/transcript-to-ui-messages";
+import { IMChat } from "./im-chat";
+import { WebChat } from "./web-chat";
 
 interface Props {
   conversationId: string;
 }
 
 export function MessagePanel({ conversationId }: Props) {
-  const { data: messages, isLoading } = useMessages(conversationId);
-  const streaming = useStreamingMessage(conversationId);
+  const { data: conv } = useConversation(conversationId);
+  const { data: transcripts, isLoading } = useMessages(conversationId);
 
-  const merged = mergeMessages(
-    messages ?? [],
-    streaming.isStreaming
-      ? { isThinking: streaming.isThinking, text: streaming.text }
-      : null
+  const initialMessages = useMemo(
+    () => toUIMessages(transcripts ?? []),
+    [transcripts]
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        加载中...
+      </div>
+    );
+  }
+
+  // Web 会话即便数据库中尚无记录也直接渲染 WebChat：记录会在首条消息到达后由
+  // ChatService 懒落库。用 createLocalWebAdapter / createLocalConversation 约定的
+  // `web:` 线程前缀识别，避免依赖尚未写库的 adapter 字段。
+  const isWeb = conv?.adapter === "web" || conversationId.startsWith("web:");
+  if (isWeb) {
+    return (
+      <WebChat
+        initialMessages={initialMessages}
+        key={conversationId}
+        threadId={conversationId}
+      />
+    );
+  }
+
+  if (!conv) {
+    return (
+      <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        加载中...
+      </div>
+    );
+  }
+
   return (
-    <Conversation>
-      <ConversationContent>
-        {isLoading ? (
-          <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            加载中...
-          </div>
-        ) : null}
-        {merged.map((m) => (
-          <Message
-            from={m.role === "user" ? "user" : "assistant"}
-            key={`${m.id}-${m.createdAt}`}
-          >
-            <MessageContent>
-              {m.isThinking ? (
-                <div className="text-muted-foreground text-sm">
-                  <Shimmer>正在思考...</Shimmer>
-                </div>
-              ) : (
-                <MessageResponse>{m.content}</MessageResponse>
-              )}
-            </MessageContent>
-          </Message>
-        ))}
-        {streaming.error ? (
-          <Message from="assistant">
-            <MessageContent>
-              <div className="text-destructive text-sm">{streaming.error}</div>
-            </MessageContent>
-          </Message>
-        ) : null}
-        {merged.length === 0 && !isLoading && !streaming.isStreaming ? (
-          <div className="flex size-full items-center justify-center text-muted-foreground text-sm">
-            暂无消息
-          </div>
-        ) : null}
-      </ConversationContent>
-      <ConversationScrollButton />
-    </Conversation>
+    <IMChat
+      adapterName={conv.adapter}
+      initialMessages={initialMessages}
+      key={conversationId}
+    />
   );
 }

@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { getMessages, listConversations } from "@/actions/conversation";
-import { ipc } from "@/ipc/manager";
+import {
+  getConversation,
+  getMessages,
+  listConversations,
+} from "@/actions/conversation";
 
 export function useConversations() {
   return useQuery({
@@ -12,7 +15,7 @@ export function useConversations() {
 export function useConversation(id: string) {
   return useQuery({
     enabled: !!id,
-    queryFn: () => ipc.client.conversation.getConversation({ id }),
+    queryFn: () => getConversation(id),
     queryKey: ["conversations", id],
   });
 }

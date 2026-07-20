@@ -1,8 +1,8 @@
 import type { Adapter } from "chat";
 import { getAdapter } from "chat/adapters";
 import { configStore } from "@/services/persistence";
+import { createLocalWebAdapter } from "@/services/web";
 
-const SUPPORTED = ["telegram", "lark"] as const;
 const PKG_OVERRIDE: Record<string, string> = {
   lark: "@larksuite/vercel-chat-adapter",
 };
@@ -31,23 +31,39 @@ export class AdapterRegistry {
   list(): AdapterEntry[] {
     const { statusState } = this;
     const creds = configStore.get("adapters", {});
-    return SUPPORTED.map((slug) => {
-      const meta = getAdapter(slug);
-      if (!meta) {
-        return null;
-      }
-      const saved = creds[slug];
-      const tracked = statusState[slug] ?? { status: "disconnected" as const };
-      return {
-        description: meta.description,
-        enabled: saved?.enabled ?? false,
-        env: saved?.env ?? {},
-        errorMessage: tracked.errorMessage,
-        name: meta.name,
-        slug,
-        status: tracked.status,
-      };
-    }).filter(Boolean) as AdapterEntry[];
+    const imEntries = (["telegram", "lark"] as const)
+      .map((slug) => {
+        const meta = getAdapter(slug);
+        if (!meta) {
+          return null;
+        }
+        const saved = creds[slug];
+        const tracked = statusState[slug] ?? {
+          status: "disconnected" as const,
+        };
+        return {
+          description: meta.description,
+          enabled: saved?.enabled ?? false,
+          env: saved?.env ?? {},
+          errorMessage: tracked.errorMessage,
+          name: meta.name,
+          slug,
+          status: tracked.status,
+        };
+      })
+      .filter(Boolean) as AdapterEntry[];
+
+    return [
+      ...imEntries,
+      {
+        description: "桌面端本地会话",
+        enabled: true,
+        env: {},
+        name: "Desktop",
+        slug: "web",
+        status: "connected",
+      },
+    ];
   }
 
   getEnabled(): AdapterEntry[] {
@@ -83,14 +99,14 @@ export class AdapterRegistry {
   }
 
   async buildAdapterMap(): Promise<Record<string, Adapter>> {
-    const map: Record<string, Adapter> = {};
+    const map: Record<string, Adapter> = { web: createLocalWebAdapter() };
     const creds = configStore.get("adapters", {});
-    for (const slug of SUPPORTED) {
+    for (const slug of ["telegram", "lark"] as const) {
       const saved = creds[slug];
       if (!saved?.enabled) {
         continue;
       }
-      // biome-ignore lint/performance/noAwaitInLoops: sequential needed — loadAdapter mutates env vars per-iteration
+      // biome-ignore lint/performance/noAwaitInLoops: sequential needed
       const adapter = await this.loadAdapter(slug, saved.env);
       if (adapter) {
         map[slug] = adapter;
