@@ -30,6 +30,7 @@
   "license": "MIT",
   "dependencies": {
     "@agentclientprotocol/sdk": "^1.2.1",
+    "@ai-sdk/react": "^4.0.34",
     "@base-ui/react": "^1.6.0",
     "@chat-adapter/state-memory": "^4.34.0",
     "@chat-adapter/telegram": "^4.34.0",
@@ -48,7 +49,7 @@
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.18",
     "@xyflow/react": "^12.11.2",
-    "ai": "^7.0.30",
+    "ai": "^7.0.31",
     "ansi-to-react": "^6.2.6",
     "chat": "^4.34.0",
     "class-variance-authority": "^0.7.1",
